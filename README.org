@@ -1,0 +1,22 @@
+# sinclude
+
+Saxon XInclude processor
+
+This is an XInclude processor that operates on the Saxon data model.
+It is not a streaming processor.
+
+#+BEGIN_SRC java
+XdmNode document = … // You got a document from somewhere, right?
+XInclude xinclude = new XInclude();
+XdmNode expanded = xinclude.expandXIncludes(document);
+#+END_SRC
+
+It supports the ~xmlns~, ~element~, ~text~, ~xpath~, and ~search~ fragment
+identifier schemes.
+
+I tried to build it in an extensible, pluggable way so that new
+schemes could be added with relative ease, but that may be a bit
+aspirational.
+
+I’ve tested it with Saxon 10.1. It might work with earlier versions.
+

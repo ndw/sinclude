@@ -1,2 +1,0 @@
-# sinclude
-Saxon XInclude processor

@@ -1,0 +1,52 @@
+plugins {
+  id "java"
+}
+
+sourceSets {
+  main {
+    resources {
+      exclude '**'
+    }
+  }	
+}
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+}
+
+configurations.all {
+  resolutionStrategy {
+    force 'xml-apis:xml-apis:1.4.01'
+  }
+}
+
+configurations {
+}
+
+dependencies {
+  implementation (
+    [group: 'net.sf.saxon', name: 'Saxon-HE', version: saxonVersion],
+    [group: 'junit', name: 'junit', version: '4.13']
+  )
+}
+
+//defaultTasks 'reportResults', 'coverageReport'
+
+jar {
+  archiveBaseName = "sinclude-${sincludeVersion}"
+  manifest {
+    attributes "Built-By": "Norman Walsh"
+    attributes "Implementation-Vendor": "Norman Walsh"
+    attributes "Implementation-Title": "Saxon XInclude Processor"
+    attributes "Implementation-Version": sincludeVersion
+  }
+}
+
+// ============================================================
+
+task helloWorld() {
+  doLast {
+    println('Hello, world.')
+  }
+}

@@ -8,7 +8,6 @@ import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.serialize.SerializationProperties;
 import net.sf.saxon.trans.XPathException;
 
@@ -18,7 +17,6 @@ import javax.xml.transform.URIResolver;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.net.URI;
 
 public class DefaultDocumentResolver implements DocumentResolver {
     @Override
@@ -41,7 +39,7 @@ public class DefaultDocumentResolver implements DocumentResolver {
         Processor processor = base.getProcessor();
         UnparsedTextURIResolver resolver = processor.getUnderlyingConfiguration().getUnparsedTextURIResolver();
         try {
-            Reader reader = resolver.resolve(base.getBaseURI(), "utf-8", processor.getUnderlyingConfiguration());
+            Reader reader = resolver.resolve(base.getBaseURI().resolve(uri), "utf-8", processor.getUnderlyingConfiguration());
             BufferedReader breader = new BufferedReader(reader);
             StringBuilder text = new StringBuilder();
             String line = breader.readLine();

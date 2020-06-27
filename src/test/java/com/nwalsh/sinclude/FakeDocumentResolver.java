@@ -2,6 +2,8 @@ package com.nwalsh.sinclude;
 
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
@@ -16,6 +18,7 @@ import org.xml.sax.InputSource;
 
 import javax.xml.transform.sax.SAXSource;
 import java.io.ByteArrayInputStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,6 +57,12 @@ public class FakeDocumentResolver implements DocumentResolver {
         xmlMap.put("ten.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  <xi:include href='one.xml' fragid='xpath(/doc/e:q) xmlns(e=http://example.com/) xpath(/doc/e:p)'/>"
                 + "</doc>");
+        xmlMap.put("eleven.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='three.xml' set-xml-id='foo' xml:base='http://example.com/'/>"
+                + "</doc>");
+        xmlMap.put("twelve.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='three.xml' set-xml-id='foo'/>"
+                + "</doc>");
     }
 
     private static Map<String, String> textMap = null;
@@ -89,6 +98,12 @@ public class FakeDocumentResolver implements DocumentResolver {
         expandedMap.put("ten.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  <p xmlns='http://example.com/'>Paragraph two.</p>"
                 + "</doc>");
+        expandedMap.put("eleven.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <doc xml:id='foo'>Document three.</doc>"
+                + "</doc>");
+        expandedMap.put("twelve.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <doc xml:id='foo'>Document three.</doc>"
+                + "</doc>");
     }
 
     @Override
@@ -97,6 +112,7 @@ public class FakeDocumentResolver implements DocumentResolver {
             try {
                 Processor processor = base.getProcessor();
                 DocumentBuilder builder = processor.newDocumentBuilder();
+                builder.setBaseURI(URI.create("http://example.com/"));
                 String text = xmlMap.get(uri);
                 return builder.build(new SAXSource(new InputSource(new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8)))));
             } catch (SaxonApiException e) {
@@ -157,6 +173,9 @@ public class FakeDocumentResolver implements DocumentResolver {
                     if (!doc1.getNodeName().equals(doc2.getNodeName())) {
                         return false;
                     }
+                    if (!theSameAttributes(doc1, doc2)) {
+                        return false;
+                    }
                 }
                 XdmSequenceIterator<XdmNode> iter1 = doc1.axisIterator(Axis.CHILD);
                 XdmSequenceIterator<XdmNode> iter2 = doc2.axisIterator(Axis.CHILD);
@@ -173,6 +192,25 @@ public class FakeDocumentResolver implements DocumentResolver {
                 if (iter2.hasNext()) {
                     return false;
                 }
+        }
+        return true;
+    }
+
+    private boolean theSameAttributes(XdmNode elem1, XdmNode elem2) {
+        AttributeMap amap1 = elem1.getUnderlyingNode().attributes();
+        AttributeMap amap2 = elem2.getUnderlyingNode().attributes();
+        if (amap1.size() != amap2.size()) {
+            return false;
+        }
+        for (int pos = 0; pos < amap1.size(); pos++) {
+            AttributeInfo a1 = amap1.itemAt(pos);
+            AttributeInfo a2 = amap2.get(a1.getNodeName());
+            if (a2 == null) {
+                return false;
+            }
+            if (!a1.getValue().equals(a2.getValue())) {
+                return false;
+            }
         }
         return true;
     }

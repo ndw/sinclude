@@ -12,8 +12,13 @@ import com.nwalsh.sinclude.xpointer.SchemeData;
 import com.nwalsh.sinclude.xpointer.SelectionResult;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
+import net.sf.saxon.event.ReceiverOption;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.om.FingerprintedQName;
 import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.om.NodeName;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmDestination;
@@ -22,10 +27,12 @@ import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.serialize.SerializationProperties;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.BuiltInAtomicType;
 
 import javax.xml.XMLConstants;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,8 +49,6 @@ public class XInclude {
     private static final QName xml_lang = new QName("xml", XMLConstants.XML_NS_URI, "lang");
     private static final QName xml_id = new QName("xml", XMLConstants.XML_NS_URI, "id");
 
-    private static final QName _fixup_xml_base = new QName("", "fixup-xml-base");
-    private static final QName _fixup_xml_lang = new QName("", "fixup-xml-lang");
     private static final QName _set_xml_id = new QName("", "set-xml-id");
     private static final QName _accept = new QName("", "accept");
     private static final QName _accept_language = new QName("", "accept-language");
@@ -66,6 +71,9 @@ public class XInclude {
             new FingerprintedQName(xml_base.getPrefix(), xml_base.getNamespaceURI(), xml_base.getLocalName());
 
     private boolean trimText = false;
+    private boolean fixupXmlBase = true;
+    private boolean fixupXmlLang = true;
+    private boolean copyAttributes = true; // XInclude 1.1
     private Vector<SchemeData> data = new Vector<>();
     private Vector<Scheme> schemes = new Vector<>();
     private DocumentResolver resolver = null;
@@ -97,6 +105,10 @@ public class XInclude {
         include.fragmentIdParser = fragmentIdParser;
         // not the data
         include.schemes.addAll(schemes);
+        include.fixupXmlBase = fixupXmlBase;
+        include.fixupXmlLang = fixupXmlLang;
+        include.copyAttributes = copyAttributes;
+        include.trimText = trimText;
         return include;
     }
 
@@ -127,6 +139,22 @@ public class XInclude {
 
     public void setTrimText(boolean trim) {
         trimText = trim;
+    }
+
+    public boolean getFixupXmlBase() {
+        return fixupXmlBase;
+    }
+
+    public void setFixupXmlBase(boolean fixup) {
+        fixupXmlBase = fixup;
+    }
+
+    public boolean getFixupXmlLang() {
+        return fixupXmlLang;
+    }
+
+    public void setFixupXmlLang(boolean fixup) {
+        fixupXmlLang = fixup;
     }
 
     public XdmNode expandXIncludes(XdmNode node) throws XPathException {
@@ -244,6 +272,14 @@ public class XInclude {
                 }
             }
 
+            if (forceFallback) {
+                if (fallback != null) {
+                    return processFallback(fallback);
+                } else {
+                    throw new RuntimeException("Fallback forced but no xi:fallback provided");
+                }
+            }
+
             XdmNode doc = null;
             try {
                 if ("text".equals(parse)) {
@@ -260,7 +296,7 @@ public class XInclude {
             }
 
             if (xptr == null) {
-                return doc;
+                return fixup(doc, setId, fixupXmlBase, fixupXmlLang);
             } else {
                 Scheme[] pointers = fragmentIdParser.parseFragmentIdentifier(parse, xptr);
                 for (Scheme pointer : pointers) {
@@ -271,13 +307,116 @@ public class XInclude {
                         Collections.addAll(data, result.getSchemeData());
                         if (result.finished()) {
                             XdmNode xidoc = result.getResult();
-                            return xidoc;
+                            return fixup(xidoc, setId, fixupXmlBase, fixupXmlLang);
                         }
                     } catch (Exception e) {
                         // nop
                     }
                 }
                 throw new RuntimeException("Failed to find");
+            }
+        }
+
+        private XdmNode fixup(XdmNode document, String setId, boolean fixupBase, boolean fixupLang) {
+            if (document == null) {
+                return document;
+            }
+
+            // FIXME: xml:base fixup doesn't work with the Saxon API, at least the way I'm using it.
+            fixupBase = false;
+
+            XdmDestination destination = new XdmDestination();
+            PipelineConfiguration pipe = document.getUnderlyingNode().getConfiguration().makePipelineConfiguration();
+            Receiver receiver = destination.getReceiver(pipe, new SerializationProperties());
+
+            try {
+                receiver.open();
+                receiver.startDocument(0);
+
+                // Note: node is a document.
+                XdmSequenceIterator<XdmNode> iter = document.axisIterator(Axis.CHILD);
+                while (iter.hasNext()) {
+                    XdmNode node = iter.next();
+
+                    if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
+                        HashSet<NodeName> copied = new HashSet<>();
+                        AttributeMap amap = EmptyAttributeMap.getInstance();
+                        AttributeMap attributes = node.getUnderlyingNode().attributes();
+
+                        if (copyAttributes) {
+                            // Handle set-xml-id; it suppresses copying the xml:id attribute and optionally
+                            // provides a value for it. (The value "" removes the xml:id.)
+                            if (setId != null) {
+                                copied.add(fq_xml_id);
+                                if (!"".equals(setId)) {
+                                    // If we have an EE processor, this should probably be of type ID.
+                                    amap = amap.put(new AttributeInfo(fq_xml_id, BuiltInAtomicType.UNTYPED_ATOMIC, setId, null, ReceiverOption.NONE));
+                                }
+                            }
+
+                            for (AttributeInfo ainfo : node.getUnderlyingNode().attributes()) {
+                                // Attribute must be in a namespace
+                                String nsuri = ainfo.getNodeName().getURI();
+                                boolean copy = (nsuri != null && !"".equals(nsuri));
+
+                                // But not in the XML namespace
+                                copy = copy && !NS_XML.equals(nsuri);
+
+                                if (copy) {
+                                    NodeName aname = ainfo.getNodeName();
+                                    if (localAttrNS.equals(aname.getURI())) {
+                                        aname = new FingerprintedQName("", "", aname.getLocalPart());
+                                    }
+
+                                    copied.add(aname);
+                                    amap = amap.put(new AttributeInfo(aname, ainfo.getType(), ainfo.getValue(), ainfo.getLocation(), ReceiverOption.NONE));
+                                }
+                            }
+                        }
+
+                        for (AttributeInfo ainfo : attributes) {
+                            if ((fq_xml_base.equals(ainfo.getNodeName()) && fixupBase)
+                                    || (fq_xml_lang.equals(ainfo.getNodeName()) && fixupLang)) {
+                                // nop
+                            } else {
+                                if (!copied.contains(ainfo.getNodeName())) {
+                                    copied.add(ainfo.getNodeName());
+                                    amap = amap.put(ainfo);
+                                }
+                            }
+                        }
+
+                        if (fixupBase) {
+                            copied.add(fq_xml_base);
+                            System.out.println("RBU:" + node.getBaseURI().toASCIIString());
+                            System.out.println("FOR:" + node.getUnderlyingNode());
+                            amap = amap.put(new AttributeInfo(fq_xml_base, BuiltInAtomicType.UNTYPED_ATOMIC, node.getBaseURI().toASCIIString(), null, ReceiverOption.NONE));
+                        }
+
+                        String lang = getLang(node);
+                        if (fixupLang && lang != null) {
+                            copied.add(fq_xml_lang);
+                            amap = amap.put(new AttributeInfo(fq_xml_lang, BuiltInAtomicType.UNTYPED_ATOMIC, lang, null, ReceiverOption.NONE));
+                        }
+
+                        NodeInfo ni = node.getUnderlyingNode();
+                        FingerprintedQName name = new FingerprintedQName(ni.getPrefix(), ni.getURI(), ni.getLocalPart());
+                        receiver.startElement(name, ni.getSchemaType(), amap, ni.getAllNamespaces(), ni.saveLocation(), 0);
+                        XdmSequenceIterator<XdmNode> citer = node.axisIterator(Axis.CHILD);
+                        while (citer.hasNext()) {
+                            receiver.append(citer.next().getUnderlyingNode());
+                        }
+                        receiver.endElement();
+                    } else {
+                        receiver.append(node.getUnderlyingNode());
+                    }
+                }
+
+                receiver.endDocument();
+                receiver.close();
+                return destination.getXdmNode();
+            } catch (XPathException e) {
+                throw new RuntimeException(e);
             }
         }
 
@@ -374,5 +513,14 @@ public class XInclude {
                 receiver.append(node.getUnderlyingNode());
             }
         }
+    }
+
+    private String getLang(XdmNode node) {
+        String lang = null;
+        while (lang == null && node.getNodeKind() == XdmNodeKind.ELEMENT) {
+            lang = node.getAttributeValue(xml_lang);
+            node = node.getParent();
+        }
+        return lang;
     }
 }

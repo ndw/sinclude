@@ -78,6 +78,7 @@ public class XPathScheme implements Scheme {
                     if (node.getNodeKind() == XdmNodeKind.ATTRIBUTE) {
                         receiver.characters(node.getStringValue(), VoidLocation.instance(), 0);
                     } else {
+                        receiver.setSystemId(node.getBaseURI().toASCIIString());
                         receiver.append(item.getUnderlyingValue());
                     }
                 } else {

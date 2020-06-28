@@ -1,6 +1,6 @@
 # sinclude
 
-Saxon XInclude processor
+Saxon 10.x XInclude processor
 
 This is an XInclude processor that operates on the Saxon data model.
 It is not a streaming processor.
@@ -17,6 +17,3 @@ identifier schemes.
 I tried to build it in an extensible, pluggable way so that new
 schemes could be added with relative ease, but that may be a bit
 aspirational.
-
-I’ve tested it with Saxon 10.1. It might work with earlier versions.
-

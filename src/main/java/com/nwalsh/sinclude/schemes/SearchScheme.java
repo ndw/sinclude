@@ -1,26 +1,17 @@
 package com.nwalsh.sinclude.schemes;
 
-import com.nwalsh.sinclude.VoidLocation;
 import com.nwalsh.sinclude.exceptions.MalformedXPointerSchemeException;
-import com.nwalsh.sinclude.exceptions.UnparseableXPointerSchemeException;
 import com.nwalsh.sinclude.xpointer.DefaultSelectionResult;
 import com.nwalsh.sinclude.xpointer.Scheme;
 import com.nwalsh.sinclude.xpointer.SchemeData;
 import com.nwalsh.sinclude.xpointer.SelectionResult;
-import net.sf.saxon.event.PipelineConfiguration;
-import net.sf.saxon.event.Receiver;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.XdmDestination;
+import com.nwalsh.sinclude.xpointer.TextScheme;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.serialize.SerializationProperties;
-import net.sf.saxon.trans.XPathException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class SearchScheme extends AbstractTextScheme implements Scheme {
+public class SearchScheme extends AbstractTextScheme implements TextScheme {
     // https://norman.walsh.name/2016/09/29/search
 
     private static final Pattern rangeRE = Pattern.compile("^.*?=(\\d*)?(,(\\d*)?)?$");

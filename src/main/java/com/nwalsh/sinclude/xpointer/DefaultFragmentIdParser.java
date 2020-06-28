@@ -46,7 +46,10 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
             // Assume it's the element scheme
             Scheme scheme = xinclude.getScheme("element");
             if (scheme != null) {
-                return new Scheme[] { scheme.newInstance(fragid) };
+                if (scheme instanceof XmlScheme) {
+                    return new Scheme[] { ((XmlScheme) scheme).newInstance(fragid, xinclude.getFixupXmlBase(), xinclude.getFixupXmlLang()) };
+                }
+                throw new RuntimeException("Unexpected scheme type in parseXmlFragid");
             } else {
                 throw new UnknownXPointerSchemeException("Unknown scheme: element");
             }
@@ -59,7 +62,10 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
 
             Scheme scheme = xinclude.getScheme("element");
             if (scheme != null) {
-                return new Scheme[] { scheme.newInstance(fragid) };
+                if (scheme instanceof XmlScheme) {
+                    return new Scheme[] { ((XmlScheme) scheme).newInstance(fragid, xinclude.getFixupXmlBase(), xinclude.getFixupXmlLang()) };
+                }
+                throw new RuntimeException("Unexpected scheme type in parseXmlFragid");
             } else {
                 throw new UnknownXPointerSchemeException("Unknown scheme: element");
             }
@@ -85,14 +91,20 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
         if (fragid.matches("^\\s*char\\s*=.*")) {
             Scheme scheme = xinclude.getScheme("text");
             if (scheme != null) {
-                return new Scheme[] { scheme.newInstance(fragid) };
+                if (scheme instanceof TextScheme) {
+                    return new Scheme[] { ((TextScheme) scheme).newInstance(fragid) };
+                }
+                throw new RuntimeException("Unexpected scheme type in parseXmlFragid");
             } else {
                 throw new UnknownXPointerSchemeException("Unknown scheme: text");
             }
         } else if (fragid.matches("^\\s*line\\s*=.*")) {
             Scheme scheme = xinclude.getScheme("text");
             if (scheme != null) {
-                return new Scheme[] { scheme.newInstance(fragid) };
+                if (scheme instanceof TextScheme) {
+                    return new Scheme[] { ((TextScheme) scheme).newInstance(fragid) };
+                }
+                throw new RuntimeException("Unexpected scheme type in parseXmlFragid");
             } else {
                 throw new UnknownXPointerSchemeException("Unknown scheme: text");
             }
@@ -100,7 +112,10 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
             Scheme scheme = xinclude.getScheme("search");
             if (scheme != null) {
                 int pos = fragid.indexOf("=");
-                return new Scheme[] { scheme.newInstance(fragid.substring(pos+1).trim()) };
+                if (scheme instanceof TextScheme) {
+                    return new Scheme[] { ((TextScheme) scheme).newInstance(fragid.substring(pos+1)) };
+                }
+                throw new RuntimeException("Unexpected scheme type in parseXmlFragid");
             } else {
                 throw new UnknownXPointerSchemeException("Unknown scheme: text");
             }
@@ -147,7 +162,13 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
 
                 Scheme scheme = xinclude.getScheme(name);
                 if (scheme != null) {
-                    return scheme.newInstance(data.toString());
+                    if (scheme instanceof XmlScheme) {
+                        return ((XmlScheme) scheme).newInstance(data.toString(), xinclude.getFixupXmlBase(), xinclude.getFixupXmlLang());
+                    }
+                    if (scheme instanceof TextScheme) {
+                        return ((TextScheme) scheme).newInstance(data.toString());
+                    }
+                    throw new RuntimeException("Unexpected scheme type in parseXmlFragid");
                 } else {
                     throw new UnknownXPointerSchemeException("Unknown scheme: " + name);
                 }

@@ -127,4 +127,33 @@ public class XIncludeTest extends TestCase {
 
         assertTrue(pass);
     }
+
+    public void testXmlIncludeThirteen() {
+        compareDocs("thirteen.xml");
+    }
+
+    public void testXmlIncludeFourteen() {
+        String key = "fourteen.xml";
+        XInclude include = new XInclude(resolver);
+        include.setFixupXmlLang(false);
+        XdmNode doc = resolver.resolveXml(emptyDoc, key, null, null);
+        XdmNode resolved = null;
+        try {
+            resolved = include.expandXIncludes(doc);
+        } catch (XPathException e) {
+            throw new RuntimeException(e);
+        }
+
+        XdmNode expected = resolver.expected(emptyDoc, key);
+
+        boolean pass = resolver.theSame(expected, resolved);
+        if (!pass) {
+            System.err.println("Expected:");
+            System.err.println(expected);
+            System.err.println("Actual:");
+            System.err.println(resolved);
+        }
+
+        assertTrue(pass);
+    }
 }

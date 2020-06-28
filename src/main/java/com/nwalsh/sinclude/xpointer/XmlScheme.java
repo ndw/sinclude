@@ -1,7 +1,5 @@
 package com.nwalsh.sinclude.xpointer;
 
-import net.sf.saxon.s9api.XdmNode;
-
-public interface XmlScheme {
-    public SelectionResult select(SchemeData[] data, XdmNode document, String fragid);
+public interface XmlScheme extends Scheme {
+    public Scheme newInstance(String fragid, boolean fixupBase, boolean fixupLang);
 }

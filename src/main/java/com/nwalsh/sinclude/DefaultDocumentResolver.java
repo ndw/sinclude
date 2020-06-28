@@ -2,6 +2,7 @@ package com.nwalsh.sinclude;
 
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
+import net.sf.saxon.expr.parser.Loc;
 import net.sf.saxon.lib.UnparsedTextURIResolver;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
@@ -56,7 +57,7 @@ public class DefaultDocumentResolver implements DocumentResolver {
             try {
                 receiver.open();
                 receiver.startDocument(0);
-                receiver.characters(text.toString(), VoidLocation.instance(), 0);
+                receiver.characters(text.toString(), Loc.NONE, 0);
                 receiver.endDocument();
                 receiver.close();
                 return destination.getXdmNode();

@@ -2,7 +2,7 @@ package com.nwalsh.sinclude;
 
 import com.nwalsh.sinclude.schemes.ElementScheme;
 import com.nwalsh.sinclude.schemes.SearchScheme;
-import com.nwalsh.sinclude.schemes.TextScheme;
+import com.nwalsh.sinclude.schemes.RFC5147;
 import com.nwalsh.sinclude.schemes.XPathScheme;
 import com.nwalsh.sinclude.schemes.XmlnsScheme;
 import com.nwalsh.sinclude.xpointer.DefaultFragmentIdParser;
@@ -13,6 +13,7 @@ import com.nwalsh.sinclude.xpointer.SelectionResult;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.event.ReceiverOption;
+import net.sf.saxon.expr.parser.Loc;
 import net.sf.saxon.om.AttributeInfo;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.EmptyAttributeMap;
@@ -58,7 +59,6 @@ public class XInclude {
     private static final QName _fragid = new QName("", "fragid");
     private static final QName _xpointer = new QName("", "xpointer");
 
-    private static final Pattern linesXptrRE = Pattern.compile("\\s*lines\\s*\\(\\s*(\\d+)\\s*-\\s*(\\d+)\\s*\\)\\s*");
     private static final Pattern lineEqual = Pattern.compile("line\\s*=\\s*\\(.*\\)\\s*");
     private static final Pattern charEqual = Pattern.compile("char\\s*=\\s*\\(.*\\)\\s*");
     private static final Pattern searchEqual = Pattern.compile("search\\s*=\\s*\\(.*\\)\\s*");
@@ -95,7 +95,7 @@ public class XInclude {
         registerScheme(new XmlnsScheme());
         registerScheme(new ElementScheme());
         registerScheme(new XPathScheme());
-        registerScheme(new TextScheme());
+        registerScheme(new RFC5147());
         registerScheme(new SearchScheme());
     }
 
@@ -295,8 +295,13 @@ public class XInclude {
                 }
             }
 
+            /*
+            System.err.println("ORIGINAL DOC:");
+            TreeDumper.dump(doc);
+             */
+
             if (xptr == null) {
-                return fixup(doc, setId, fixupXmlBase, fixupXmlLang);
+                return fixup(doc, setId, fixupXmlBase);
             } else {
                 Scheme[] pointers = fragmentIdParser.parseFragmentIdentifier(parse, xptr);
                 for (Scheme pointer : pointers) {
@@ -307,7 +312,16 @@ public class XInclude {
                         Collections.addAll(data, result.getSchemeData());
                         if (result.finished()) {
                             XdmNode xidoc = result.getResult();
-                            return fixup(xidoc, setId, fixupXmlBase, fixupXmlLang);
+                            /*
+                            System.err.println("XINCLUDED DOC:");
+                            TreeDumper.dump(xidoc);
+                             */
+                            XdmNode fixed = fixup(xidoc, setId, false);
+                            /*
+                            System.err.println("FIXED DOC:");
+                            TreeDumper.dump(fixed);
+                             */
+                            return fixed;
                         }
                     } catch (Exception e) {
                         // nop
@@ -317,13 +331,18 @@ public class XInclude {
             }
         }
 
-        private XdmNode fixup(XdmNode document, String setId, boolean fixupBase, boolean fixupLang) {
+        private XdmNode fixup(XdmNode document, String setId, boolean fixupBase) {
+            // Fixing up xml:base is usually handled by the fragid processor.
+            // It's only ever true here if we're XIncluding a whole document.
+            // Consequently, fixupLang never applies here.
+
             if (document == null) {
                 return document;
             }
 
-            // FIXME: xml:base fixup doesn't work with the Saxon API, at least the way I'm using it.
-            fixupBase = false;
+            if (document.getNodeKind() != XdmNodeKind.DOCUMENT) {
+                throw new IllegalArgumentException("Fixup can only be called on a document");
+            }
 
             XdmDestination destination = new XdmDestination();
             PipelineConfiguration pipe = document.getUnderlyingNode().getConfiguration().makePipelineConfiguration();
@@ -374,29 +393,19 @@ public class XInclude {
                             }
                         }
 
-                        for (AttributeInfo ainfo : attributes) {
-                            if ((fq_xml_base.equals(ainfo.getNodeName()) && fixupBase)
-                                    || (fq_xml_lang.equals(ainfo.getNodeName()) && fixupLang)) {
-                                // nop
-                            } else {
-                                if (!copied.contains(ainfo.getNodeName())) {
-                                    copied.add(ainfo.getNodeName());
-                                    amap = amap.put(ainfo);
-                                }
-                            }
-                        }
-
                         if (fixupBase) {
-                            copied.add(fq_xml_base);
-                            System.out.println("RBU:" + node.getBaseURI().toASCIIString());
-                            System.out.println("FOR:" + node.getUnderlyingNode());
-                            amap = amap.put(new AttributeInfo(fq_xml_base, BuiltInAtomicType.UNTYPED_ATOMIC, node.getBaseURI().toASCIIString(), null, ReceiverOption.NONE));
+                            AttributeInfo base = new AttributeInfo(fq_xml_base,
+                                    BuiltInAtomicType.UNTYPED_ATOMIC,
+                                    node.getBaseURI().toASCIIString(),
+                                    Loc.NONE, ReceiverOption.NONE);
+                            amap = amap.put(base);
                         }
 
-                        String lang = getLang(node);
-                        if (fixupLang && lang != null) {
-                            copied.add(fq_xml_lang);
-                            amap = amap.put(new AttributeInfo(fq_xml_lang, BuiltInAtomicType.UNTYPED_ATOMIC, lang, null, ReceiverOption.NONE));
+                        for (AttributeInfo ainfo : attributes) {
+                            if (!copied.contains(ainfo.getNodeName())) {
+                                copied.add(ainfo.getNodeName());
+                                amap = amap.put(ainfo);
+                            }
                         }
 
                         NodeInfo ni = node.getUnderlyingNode();
@@ -513,14 +522,5 @@ public class XInclude {
                 receiver.append(node.getUnderlyingNode());
             }
         }
-    }
-
-    private String getLang(XdmNode node) {
-        String lang = null;
-        while (lang == null && node.getNodeKind() == XdmNodeKind.ELEMENT) {
-            lang = node.getAttributeValue(xml_lang);
-            node = node.getParent();
-        }
-        return lang;
     }
 }

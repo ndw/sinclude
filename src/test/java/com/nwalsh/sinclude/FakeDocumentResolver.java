@@ -2,6 +2,7 @@ package com.nwalsh.sinclude;
 
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
+import net.sf.saxon.expr.parser.Loc;
 import net.sf.saxon.om.AttributeInfo;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.s9api.Axis;
@@ -30,6 +31,12 @@ public class FakeDocumentResolver implements DocumentResolver {
         xmlMap.put("one.xml", "<doc>"
                 + "  <p xml:id='one'>Paragraph one.</p>"
                 + "  <p xmlns='http://example.com/'>Paragraph two.</p>"
+                + "  <p xml:lang='fr'>Paragraphe trois.</p>"
+                + "</doc>");
+        xmlMap.put("onefr.xml", "<doc xml:lang='fr'>"
+                + "  <p xml:lang='en'>Paragraph one.</p>"
+                + "  <p xml:lang='en'>Paragraph two.</p>"
+                + "  <p>Paragraphe trois.</p>"
                 + "</doc>");
         xmlMap.put("two.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  <xi:include href='three.xml'/>"
@@ -58,10 +65,18 @@ public class FakeDocumentResolver implements DocumentResolver {
                 + "  <xi:include href='one.xml' fragid='xpath(/doc/e:q) xmlns(e=http://example.com/) xpath(/doc/e:p)'/>"
                 + "</doc>");
         xmlMap.put("eleven.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
-                + "  <xi:include href='three.xml' set-xml-id='foo' xml:base='http://example.com/'/>"
-                + "</doc>");
-        xmlMap.put("twelve.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  <xi:include href='three.xml' set-xml-id='foo'/>"
+                + "</doc>");
+        // N.B. This is exactly the same as test four, but the test harness runs it with
+        // fixup-xml-base disabled.
+        xmlMap.put("twelve.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='one.xml' fragid='one'/>"
+                + "</doc>");
+        xmlMap.put("thirteen.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='onefr.xml' fragid='/1/3'/>"
+                + "</doc>");
+        xmlMap.put("fourteen.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='onefr.xml' fragid='/1/3'/>"
                 + "</doc>");
     }
 
@@ -75,13 +90,13 @@ public class FakeDocumentResolver implements DocumentResolver {
     static {
         expandedMap = new HashMap<>();
         expandedMap.put("two.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
-                    + "  <doc>Document three.</doc>"
+                    + "  <doc xml:base='http://example.com/docs/three.xml'>Document three.</doc>"
                     + "</doc>");
         expandedMap.put("four.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
-                    + "  <p xml:id='one'>Paragraph one.</p>"
+                    + "  <p xml:id='one' xml:base='http://example.com/docs/one.xml'>Paragraph one.</p>"
                     + "</doc>");
         expandedMap.put("five.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
-                    + "  <p xmlns='http://example.com/'>Paragraph two.</p>"
+                    + "  <p xmlns='http://example.com/' xml:base='http://example.com/docs/one.xml'>Paragraph two.</p>"
                     + "</doc>");
         expandedMap.put("six.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                     + "  one"
@@ -93,16 +108,24 @@ public class FakeDocumentResolver implements DocumentResolver {
                 + "  fallback"
                 + "</doc>");
         expandedMap.put("nine.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
-                + "  <p xml:id='one'>Paragraph one.</p>"
+                + "  <p xml:id='one' xml:base='http://example.com/docs/one.xml'>Paragraph one.</p>"
                 + "</doc>");
         expandedMap.put("ten.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
-                + "  <p xmlns='http://example.com/'>Paragraph two.</p>"
+                + "  <p xmlns='http://example.com/' xml:base='http://example.com/docs/one.xml'>Paragraph two.</p>"
                 + "</doc>");
         expandedMap.put("eleven.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
-                + "  <doc xml:id='foo'>Document three.</doc>"
+                + "  <doc xml:id='foo' xml:base='http://example.com/docs/three.xml'>Document three.</doc>"
                 + "</doc>");
+        // N.B. This is exactly the same as test four, but the test harness runs it with
+        // fixup-xml-base disabled.
         expandedMap.put("twelve.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
-                + "  <doc xml:id='foo'>Document three.</doc>"
+                + "  <p xml:id='one'>Paragraph one.</p>"
+                + "</doc>");
+        expandedMap.put("thirteen.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <p xml:lang='fr' xml:base='http://example.com/docs/onefr.xml'>Paragraphe trois.</p>"
+                + "</doc>");
+        expandedMap.put("fourteen.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <p xml:base='http://example.com/docs/onefr.xml'>Paragraphe trois.</p>"
                 + "</doc>");
     }
 
@@ -110,11 +133,15 @@ public class FakeDocumentResolver implements DocumentResolver {
     public XdmNode resolveXml(XdmNode base, String uri, String accept, String acceptLanguage) {
         if (xmlMap.containsKey(uri)) {
             try {
+                String text = xmlMap.get(uri);
+                String baseURI = "http://example.com/docs/" + uri;
+
                 Processor processor = base.getProcessor();
                 DocumentBuilder builder = processor.newDocumentBuilder();
-                builder.setBaseURI(URI.create("http://example.com/"));
-                String text = xmlMap.get(uri);
-                return builder.build(new SAXSource(new InputSource(new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8)))));
+                builder.setBaseURI(URI.create(baseURI));
+                InputSource source = new InputSource(new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8)));
+                source.setSystemId(baseURI);
+                return builder.build(new SAXSource(source));
             } catch (SaxonApiException e) {
                 throw new RuntimeException(e);
             }
@@ -133,7 +160,7 @@ public class FakeDocumentResolver implements DocumentResolver {
             try {
                 receiver.open();
                 receiver.startDocument(0);
-                receiver.characters(text, VoidLocation.instance(), 0);
+                receiver.characters(text, Loc.NONE, 0);
                 receiver.endDocument();
                 receiver.close();
                 return destination.getXdmNode();

@@ -8,6 +8,7 @@ import com.nwalsh.sinclude.xpointer.SelectionResult;
 import junit.framework.TestCase;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
+import net.sf.saxon.expr.parser.Loc;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
@@ -67,7 +68,7 @@ public class SchemeTextTest extends TestCase {
         try {
             receiver.open();
             receiver.startDocument(0);
-            receiver.characters(doc, VoidLocation.instance(), 0);
+            receiver.characters(doc, Loc.NONE, 0);
             receiver.endDocument();
             receiver.close();
             document = destination.getXdmNode();

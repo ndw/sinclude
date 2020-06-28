@@ -1,30 +1,14 @@
 package com.nwalsh.sinclude.schemes;
 
-import com.nwalsh.sinclude.VoidLocation;
-import com.nwalsh.sinclude.data.XmlnsData;
-import com.nwalsh.sinclude.exceptions.MalformedXPointerSchemeException;
 import com.nwalsh.sinclude.exceptions.UnparseableXPointerSchemeException;
 import com.nwalsh.sinclude.xpointer.DefaultSelectionResult;
 import com.nwalsh.sinclude.xpointer.Scheme;
 import com.nwalsh.sinclude.xpointer.SchemeData;
 import com.nwalsh.sinclude.xpointer.SelectionResult;
-import net.sf.saxon.event.PipelineConfiguration;
-import net.sf.saxon.event.Receiver;
-import net.sf.saxon.functions.Abs;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.XdmItem;
+import com.nwalsh.sinclude.xpointer.TextScheme;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.serialize.SerializationProperties;
-import net.sf.saxon.trans.XPathException;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-public class TextScheme extends AbstractTextScheme implements Scheme {
+public class RFC5147 extends AbstractTextScheme implements TextScheme {
     // RFC 5147:
     // text-fragment   =  text-scheme 0*( ";" integrity-check )
     // text-scheme     =  ( char-scheme / line-scheme )
@@ -45,7 +29,7 @@ public class TextScheme extends AbstractTextScheme implements Scheme {
     private String md5 = null;
 
     @Override
-    public TextScheme newInstance(String fdata) {
+    public RFC5147 newInstance(String fdata) {
         boolean fLineScheme = false;
         if (fdata.startsWith("line=")) {
             fLineScheme = true;
@@ -83,7 +67,7 @@ public class TextScheme extends AbstractTextScheme implements Scheme {
 
         // FIXME: deal with the integrity checks
 
-        TextScheme scheme = new TextScheme();
+        RFC5147 scheme = new RFC5147();
         scheme.rangeStart = fRangeStart;
         scheme.rangeEnd = fRangeEnd;
         scheme.lineScheme = fLineScheme;

@@ -1,22 +1,9 @@
 package com.nwalsh.sinclude.schemes;
 
-import com.nwalsh.sinclude.data.XmlnsData;
 import com.nwalsh.sinclude.exceptions.MalformedXPointerSchemeException;
-import com.nwalsh.sinclude.xpointer.DefaultSelectionResult;
-import com.nwalsh.sinclude.xpointer.Scheme;
 import com.nwalsh.sinclude.xpointer.SchemeData;
 import com.nwalsh.sinclude.xpointer.SelectionResult;
-import net.sf.saxon.event.PipelineConfiguration;
-import net.sf.saxon.event.Receiver;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XPathCompiler;
-import net.sf.saxon.s9api.XPathExecutable;
-import net.sf.saxon.s9api.XPathSelector;
-import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.serialize.SerializationProperties;
-import net.sf.saxon.trans.XPathException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,10 +12,12 @@ public class ElementScheme extends XPathScheme {
     private String fragid = null;
 
     @Override
-    public ElementScheme newInstance(String fdata) {
+    public ElementScheme newInstance(String fdata, boolean fixupBase, boolean fixupLang) {
         ElementScheme scheme = new ElementScheme();
         scheme.fragid = fdata;
         scheme.xpath = toXPath(fdata);
+        scheme.fixupBase = fixupBase;
+        scheme.fixupLang = fixupLang;
         return scheme;
     }
 

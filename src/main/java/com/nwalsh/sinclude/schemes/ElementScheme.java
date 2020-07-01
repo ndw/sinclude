@@ -1,6 +1,7 @@
 package com.nwalsh.sinclude.schemes;
 
 import com.nwalsh.sinclude.exceptions.MalformedXPointerSchemeException;
+import com.nwalsh.sinclude.exceptions.XIncludeIOException;
 import com.nwalsh.sinclude.xpointer.SchemeData;
 import com.nwalsh.sinclude.xpointer.SelectionResult;
 import net.sf.saxon.s9api.XdmNode;
@@ -31,7 +32,7 @@ public class ElementScheme extends XPathScheme {
         try {
             return super.select(schemeData, document);
         } catch (RuntimeException e) {
-            throw new RuntimeException("Element scheme matched non-node item?: " + schemeName() + "(" + fragid + ")");
+            throw new XIncludeIOException("Element scheme matched non-node item?: " + schemeName() + "(" + fragid + ")");
         }
     }
 

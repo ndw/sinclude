@@ -1,6 +1,6 @@
 package com.nwalsh.sinclude.exceptions;
 
-public class UnparseableXPointerSchemeException extends RuntimeException {
+public class UnparseableXPointerSchemeException extends XIncludeSyntaxException {
     public UnparseableXPointerSchemeException(String message) {
         super(message);
     }

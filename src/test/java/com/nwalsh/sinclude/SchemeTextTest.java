@@ -2,6 +2,7 @@ package com.nwalsh.sinclude;
 
 import com.nwalsh.sinclude.xpointer.DefaultSelectionResult;
 import com.nwalsh.sinclude.xpointer.FragmentIdParser;
+import com.nwalsh.sinclude.xpointer.ParseType;
 import com.nwalsh.sinclude.xpointer.Scheme;
 import com.nwalsh.sinclude.xpointer.SchemeData;
 import com.nwalsh.sinclude.xpointer.SelectionResult;
@@ -78,7 +79,7 @@ public class SchemeTextTest extends TestCase {
     }
 
     public void testLineRange0() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "line=0,1");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "line=0,1");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -88,7 +89,7 @@ public class SchemeTextTest extends TestCase {
     }
 
     public void testLineRange3() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "line=3,6");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "line=3,6");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -98,7 +99,7 @@ public class SchemeTextTest extends TestCase {
     }
 
     public void testLineRangeTo5() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "line=,4");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "line=,4");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -108,7 +109,7 @@ public class SchemeTextTest extends TestCase {
     }
 
     public void testLineRangeFrom18() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "line=17,");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "line=17,");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -118,7 +119,7 @@ public class SchemeTextTest extends TestCase {
     }
 
     public void testLineRangePointless() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "line=3");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "line=3");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -128,7 +129,7 @@ public class SchemeTextTest extends TestCase {
     }
 
     public void testCharRange0() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "char=0,1");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "char=0,1");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -138,7 +139,7 @@ public class SchemeTextTest extends TestCase {
     }
 
     public void testCharRange3() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "char=3,6");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "char=3,6");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -148,7 +149,7 @@ public class SchemeTextTest extends TestCase {
     }
 
     public void testCharRangeTo5() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "char=,4");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "char=,4");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -158,7 +159,7 @@ public class SchemeTextTest extends TestCase {
     }
 
     public void testCharRangeFrom250() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "char=248,");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "char=248,");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -168,7 +169,7 @@ public class SchemeTextTest extends TestCase {
     }
 
     public void testCharRangePointless() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "char=3");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "char=3");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());

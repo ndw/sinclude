@@ -1,12 +1,18 @@
 package com.nwalsh.sinclude;
 
+import com.nwalsh.sinclude.exceptions.XIncludeException;
+import com.nwalsh.sinclude.exceptions.XIncludeFallbackException;
+import com.nwalsh.sinclude.exceptions.XIncludeLoopException;
+import com.nwalsh.sinclude.exceptions.XIncludeNoFragmentException;
+import com.nwalsh.sinclude.exceptions.XIncludeSyntaxException;
 import com.nwalsh.sinclude.schemes.ElementScheme;
 import com.nwalsh.sinclude.schemes.SearchScheme;
-import com.nwalsh.sinclude.schemes.RFC5147;
+import com.nwalsh.sinclude.schemes.RFC5147Scheme;
 import com.nwalsh.sinclude.schemes.XPathScheme;
 import com.nwalsh.sinclude.schemes.XmlnsScheme;
 import com.nwalsh.sinclude.xpointer.DefaultFragmentIdParser;
 import com.nwalsh.sinclude.xpointer.FragmentIdParser;
+import com.nwalsh.sinclude.xpointer.ParseType;
 import com.nwalsh.sinclude.xpointer.Scheme;
 import com.nwalsh.sinclude.xpointer.SchemeData;
 import com.nwalsh.sinclude.xpointer.SelectionResult;
@@ -14,6 +20,7 @@ import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.event.ReceiverOption;
 import net.sf.saxon.expr.parser.Loc;
+import net.sf.saxon.lib.Logger;
 import net.sf.saxon.om.AttributeInfo;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.EmptyAttributeMap;
@@ -31,9 +38,11 @@ import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.BuiltInAtomicType;
 
 import javax.xml.XMLConstants;
+import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Stack;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -78,6 +87,7 @@ public class XInclude {
     private Vector<Scheme> schemes = new Vector<>();
     private DocumentResolver resolver = null;
     private FragmentIdParser fragmentIdParser = null;
+    private Stack<URI> uriStack = new Stack<>();
 
     public XInclude() {
         resolver = new DefaultDocumentResolver();
@@ -95,7 +105,7 @@ public class XInclude {
         registerScheme(new XmlnsScheme());
         registerScheme(new ElementScheme());
         registerScheme(new XPathScheme());
-        registerScheme(new RFC5147());
+        registerScheme(new RFC5147Scheme());
         registerScheme(new SearchScheme());
     }
 
@@ -109,6 +119,7 @@ public class XInclude {
         include.fixupXmlLang = fixupXmlLang;
         include.copyAttributes = copyAttributes;
         include.trimText = trimText;
+        include.uriStack.addAll(uriStack);
         return include;
     }
 
@@ -159,24 +170,35 @@ public class XInclude {
 
     public XdmNode expandXIncludes(XdmNode node) throws XPathException {
         TreeWalker walker = new TreeWalker();
-        walker.register(xi_include, new XiIncludeHandler());
+        walker.register(xi_include, new XiIncludeHandler(this));
         walker.register(xi_fallback, new XiFallbackHandler());
         return walker.walk(node);
     }
 
     private interface ElementHandler {
-        public XdmNode process(XdmNode node);
+        public XdmNode process(XdmNode node) throws XPathException;
     }
 
     private class XiIncludeHandler implements ElementHandler {
-        public XdmNode process(XdmNode node) {
+        private XInclude xinclude = null;
+
+        private XiIncludeHandler() {
+            // no.
+        }
+
+        public XiIncludeHandler(XInclude include) {
+            xinclude = include;
+        }
+
+        public XdmNode process(XdmNode node) throws XPathException {
             String href = node.getAttributeValue(_href);
-            String parse = node.getAttributeValue(_parse);
             String xptr = node.getAttributeValue(_xpointer);
             String fragid = node.getAttributeValue(_fragid);
             String setId = node.getAttributeValue(_set_xml_id);
             String accept = node.getAttributeValue(_accept);
             String accept_lang = node.getAttributeValue(_accept_language);
+            String parseAttr = node.getAttributeValue(_parse);
+            ParseType parse = ParseType.NOPARSE;
 
             if (href == null) {
                 href = "";
@@ -206,142 +228,131 @@ public class XInclude {
                 }
             }
 
-            boolean forceFallback = false;
-
-            if (parse == null) {
-                parse = "xml";
+            if (parseAttr == null) {
+                parseAttr = "xml";
             }
 
-            if (parse.contains(";")) {
-                parse = parse.substring(0, parse.indexOf(";")).trim();
+            if (parseAttr.contains(";")) {
+                parseAttr = parseAttr.substring(0, parseAttr.indexOf(";")).trim();
             }
 
-            if ("xml".equals(parse) || "application/xml".equals(parse) || ("text/xml".equals(parse) || parse.endsWith("+xml"))) {
-                parse = "xml";
-            } else if ("text".equals(parse) || parse.startsWith("text/")) {
-                parse = "text";
+            if ("xml".equals(parseAttr) || "application/xml".equals(parseAttr) || ("text/xml".equals(parseAttr) || parseAttr.endsWith("+xml"))) {
+                parse = ParseType.XMLPARSE;
+            } else if ("text".equals(parseAttr) || parseAttr.startsWith("text/")) {
+                parse = ParseType.TEXTPARSE;
             } else {
+                // parse = ParseType.NOPARSE so fallback will be forced
                 xptr = null;
                 fragid = null;
-                forceFallback = true;
             }
 
-            if (xptr != null && fragid != null) {
-                if (!xptr.equals(fragid)) {
-                    if ("xml".equals(parse)) {
-                        // log something
-                    } else {
-                        // log something
-                        xptr = fragid;
-                    }
+            if (xptr != null && fragid != null && !xptr.equals(fragid)) {
+                Logger logger = node.getProcessor().getUnderlyingConfiguration().getLogger();
+                if (parse == ParseType.XMLPARSE) {
+                    logger.info("XInclude specifies different xpointer/fragid, using xpointer for xml: " + xptr);
+                } else {
+                    xptr = fragid;
+                    logger.info("XInclude specifies different xpointer/fragid, using fragid for text: " + xptr);
                 }
             }
 
             if (xptr == null && fragid != null) {
                 xptr = fragid;
-                fragid = null;
             }
 
-            if (xptr != null && fragid != null) {
-                if (!xptr.equals(fragid)) {
-                    if ("xml".equals(parse)) {
-                        System.out.println("XInclude specifies different xpointer/fragid, using xpointer for xml: " + xptr);
-                    } else {
-                        xptr = fragid;
-                        System.out.println("XInclude specifies different xpointer/fragid, using fragid for " + parse + ": " + xptr);
-                    }
-                }
-            }
-
-            if (xptr != null) {
+            if (xptr != null && parse == ParseType.TEXTPARSE) {
                 /* HACK */
-                if ("text".equals(parse)) {
-                    String xtrim = xptr.trim();
-                    Matcher lmatcher = lineEqual.matcher(xtrim);
-                    Matcher cmatcher = charEqual.matcher(xtrim);
-                    Matcher smatcher = searchEqual.matcher(xtrim);
-                    if (lmatcher.find() || cmatcher.find()) {
-                        if (lmatcher.find()) {
-                            xptr = "text(" + lmatcher.group(1) + ")";
-                        } else {
-                            xptr = "text(" + cmatcher.group(1) + ")";
-                        }
-                    } else if (smatcher.find()) {
-                        xptr = "search(" + smatcher.group(1) + ")";
+                String xtrim = xptr.trim();
+                Matcher lmatcher = lineEqual.matcher(xtrim);
+                Matcher cmatcher = charEqual.matcher(xtrim);
+                Matcher smatcher = searchEqual.matcher(xtrim);
+                if (lmatcher.find() || cmatcher.find()) {
+                    if (lmatcher.find()) {
+                        xptr = "text(" + lmatcher.group(1) + ")";
+                    } else {
+                        xptr = "text(" + cmatcher.group(1) + ")";
                     }
+                } else if (smatcher.find()) {
+                    xptr = "search(" + smatcher.group(1) + ")";
                 }
             }
 
-            if (forceFallback) {
+            if (parse == ParseType.NOPARSE) {
                 if (fallback != null) {
                     return processFallback(fallback);
                 } else {
-                    throw new RuntimeException("Fallback forced but no xi:fallback provided");
+                    throw new XIncludeFallbackException("Fallback forced (invalid parse attribute) but no xi:fallback provided");
                 }
             }
 
             XdmNode doc = null;
             try {
-                if ("text".equals(parse)) {
+                if (!"".equals(href)) {
+                    URI next = node.getBaseURI().resolve(href);
+                    if (uriStack.contains(next)) {
+                        throw new XIncludeLoopException("XInclude loops: " + next.toASCIIString());
+                    }
+                    uriStack.push(next);
+                }
+
+                if (parse == ParseType.TEXTPARSE) {
                     doc = resolver.resolveText(node, href, accept, accept_lang);
                 } else {
                     doc = resolver.resolveXml(node, href, accept, accept_lang);
                 }
+
+                if (xptr != null) {
+                    Exception lastException = null;
+                    boolean success = false;
+                    Scheme[] pointers = fragmentIdParser.parseFragmentIdentifier(parse, xptr);
+                    for (Scheme pointer : pointers) {
+                        if (!success) {
+                            try {
+                                SchemeData[] array = new SchemeData[data.size()];
+                                data.toArray(array);
+                                SelectionResult result = pointer.select(array, doc);
+                                Collections.addAll(data, result.getSchemeData());
+                                if (result.finished()) {
+                                    XdmNode xidoc = result.getResult();
+                                    if (xidoc != null) {
+                                        doc = xidoc;
+                                        success = true;
+                                    }
+                                }
+                            } catch (Exception e) {
+                                lastException = e;
+                            }
+                        }
+                    }
+                    if (!success) {
+                        if (lastException != null) {
+                            throw new XIncludeNoFragmentException("Failed to locate fragment: " + xptr, lastException);
+                        }
+                        throw new XIncludeNoFragmentException("Failed to locate fragment: " + xptr);
+                    }
+                }
             } catch (Exception e) {
                 if (fallback != null) {
-                    return processFallback(fallback);
+                    doc = processFallback(fallback);
                 } else {
                     throw e;
                 }
             }
 
-            /*
-            System.err.println("ORIGINAL DOC:");
-            TreeDumper.dump(doc);
-             */
-
-            if (xptr == null) {
-                return fixup(doc, setId, fixupXmlBase);
-            } else {
-                Scheme[] pointers = fragmentIdParser.parseFragmentIdentifier(parse, xptr);
-                for (Scheme pointer : pointers) {
-                    SchemeData[] array = new SchemeData[data.size()];
-                    data.toArray(array);
-                    try {
-                        SelectionResult result = pointer.select(array, doc);
-                        Collections.addAll(data, result.getSchemeData());
-                        if (result.finished()) {
-                            XdmNode xidoc = result.getResult();
-                            /*
-                            System.err.println("XINCLUDED DOC:");
-                            TreeDumper.dump(xidoc);
-                             */
-                            XdmNode fixed = fixup(xidoc, setId, false);
-                            /*
-                            System.err.println("FIXED DOC:");
-                            TreeDumper.dump(fixed);
-                             */
-                            return fixed;
-                        }
-                    } catch (Exception e) {
-                        // nop
-                    }
-                }
-                throw new RuntimeException("Failed to find");
-            }
+            XInclude nested = xinclude.newInstance();
+            doc = fixup(doc, setId);
+            doc = nested.expandXIncludes(doc);
+            uriStack.pop();
+            return doc;
         }
 
-        private XdmNode fixup(XdmNode document, String setId, boolean fixupBase) {
+        private XdmNode fixup(XdmNode document, String setId) {
             // Fixing up xml:base is usually handled by the fragid processor.
             // It's only ever true here if we're XIncluding a whole document.
             // Consequently, fixupLang never applies here.
-
-            if (document == null) {
-                return document;
-            }
-
             if (document.getNodeKind() != XdmNodeKind.DOCUMENT) {
-                throw new IllegalArgumentException("Fixup can only be called on a document");
+                // This is an internal error and should never happen
+                throw new IllegalArgumentException("XInclude fixup can only be called on a document");
             }
 
             XdmDestination destination = new XdmDestination();
@@ -349,6 +360,7 @@ public class XInclude {
             Receiver receiver = destination.getReceiver(pipe, new SerializationProperties());
 
             try {
+                receiver.setSystemId(document.getBaseURI().toASCIIString());
                 receiver.open();
                 receiver.startDocument(0);
 
@@ -393,7 +405,10 @@ public class XInclude {
                             }
                         }
 
-                        if (fixupBase) {
+                        if (getFixupXmlBase()) {
+                            // If fixupXmlBase is true, this nodes base URI will be correct because either:
+                            // 1. The XPathScheme will have already done fixup or
+                            // 2. The whole document is being XIncluded (in which case fixup is still necessary)
                             AttributeInfo base = new AttributeInfo(fq_xml_base,
                                     BuiltInAtomicType.UNTYPED_ATOMIC,
                                     node.getBaseURI().toASCIIString(),
@@ -425,7 +440,8 @@ public class XInclude {
                 receiver.close();
                 return destination.getXdmNode();
             } catch (XPathException e) {
-                throw new RuntimeException(e);
+                // I don't actually think this can happen...
+                throw new XIncludeException(e);
             }
         }
 
@@ -452,14 +468,15 @@ public class XInclude {
                 receiver.close();
                 return destination.getXdmNode();
             } catch (XPathException e) {
-                throw new RuntimeException(e);
+                // I don't think this can actually happen...
+                throw new XIncludeException(e);
             }
         }
     }
 
     private static class XiFallbackHandler implements ElementHandler {
         public XdmNode process(XdmNode node) {
-            throw new UnsupportedOperationException("An xi:fallback element isn't allowed here");
+            throw new XIncludeSyntaxException("An xi:fallback element isn't allowed here");
         }
     }
 

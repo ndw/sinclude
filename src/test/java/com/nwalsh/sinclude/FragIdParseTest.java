@@ -1,8 +1,10 @@
 package com.nwalsh.sinclude;
 
 import com.nwalsh.sinclude.exceptions.UnknownXPointerSchemeException;
+import com.nwalsh.sinclude.exceptions.XIncludeSyntaxException;
 import com.nwalsh.sinclude.xpointer.DefaultFragmentIdParser;
 import com.nwalsh.sinclude.xpointer.FragmentIdParser;
+import com.nwalsh.sinclude.xpointer.ParseType;
 import com.nwalsh.sinclude.xpointer.Scheme;
 import junit.framework.TestCase;
 
@@ -17,9 +19,9 @@ public class FragIdParseTest extends TestCase {
 
     public void testInvalidParseType() {
         try {
-            fragidParser.parseFragmentIdentifier("fred", "id");
+            fragidParser.parseFragmentIdentifier(ParseType.NOPARSE, "id");
             fail();
-        } catch (IllegalArgumentException iae) {
+        } catch (XIncludeSyntaxException iae) {
             // ok
         }
     }
@@ -27,7 +29,7 @@ public class FragIdParseTest extends TestCase {
     public void testUnknownScheme() {
         xinclude.clearSchemes();
         try {
-            fragidParser.parseFragmentIdentifier("xml", "id");
+            fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, "id");
             fail();
         } catch (UnknownXPointerSchemeException e) {
             // ok;
@@ -38,21 +40,21 @@ public class FragIdParseTest extends TestCase {
     }
 
     public void testId() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("xml", "id");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, "id");
         assertEquals(1, schemes.length);
         assertEquals("element", schemes[0].schemeName());
         assertEquals("xml", schemes[0].parseType());
     }
 
     public void testTumbler() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("xml", "/1/2");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, "/1/2");
         assertEquals(1, schemes.length);
         assertEquals("element", schemes[0].schemeName());
         assertEquals("xml", schemes[0].parseType());
     }
 
     public void testElementScheme() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("xml", "element(id)");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, "element(id)");
         assertEquals(1, schemes.length);
         assertEquals("element", schemes[0].schemeName());
         assertEquals("xml", schemes[0].parseType());

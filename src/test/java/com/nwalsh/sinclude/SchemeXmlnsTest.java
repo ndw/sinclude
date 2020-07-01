@@ -4,6 +4,7 @@ import com.nwalsh.sinclude.data.XmlnsData;
 import com.nwalsh.sinclude.exceptions.MalformedXPointerSchemeException;
 import com.nwalsh.sinclude.schemes.XmlnsScheme;
 import com.nwalsh.sinclude.xpointer.FragmentIdParser;
+import com.nwalsh.sinclude.xpointer.ParseType;
 import com.nwalsh.sinclude.xpointer.Scheme;
 import com.nwalsh.sinclude.xpointer.SchemeData;
 import com.nwalsh.sinclude.xpointer.SelectionResult;
@@ -19,7 +20,7 @@ public class SchemeXmlnsTest extends TestCase {
     }
 
     public void testXmlnsScheme() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("xml", "xmlns(db=http://docbook.org/ns/docbook)");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, "xmlns(db=http://docbook.org/ns/docbook)");
         XmlnsScheme scheme = (XmlnsScheme) schemes[0];
 
         SelectionResult result = scheme.select(new SchemeData[]{}, null);
@@ -34,7 +35,7 @@ public class SchemeXmlnsTest extends TestCase {
 
     public void testXmlnsSchemeError() {
         try {
-            fragidParser.parseFragmentIdentifier("xml", "xmlns(db http://docbook.org/ns/docbook)");
+            fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, "xmlns(db http://docbook.org/ns/docbook)");
             fail();
         } catch (MalformedXPointerSchemeException iae) {
             assertTrue(true);

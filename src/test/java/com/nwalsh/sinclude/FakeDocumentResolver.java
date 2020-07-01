@@ -3,6 +3,7 @@ package com.nwalsh.sinclude;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.expr.parser.Loc;
+import net.sf.saxon.lib.Logger;
 import net.sf.saxon.om.AttributeInfo;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.s9api.Axis;
@@ -78,6 +79,45 @@ public class FakeDocumentResolver implements DocumentResolver {
         xmlMap.put("fourteen.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  <xi:include href='onefr.xml' fragid='/1/3'/>"
                 + "</doc>");
+        xmlMap.put("nest1.xml", "<nest1 xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='nest2.xml'/>"
+                + "</nest1>");
+        xmlMap.put("nest2.xml", "<nest2 xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='nest3.xml'/>"
+                + "</nest2>");
+        xmlMap.put("nest3.xml", "<nest3 xmlns:xi='http://www.w3.org/2001/XInclude'/>");
+        xmlMap.put("loop1.xml", "<nest1 xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='loop2.xml'/>"
+                + "</nest1>");
+        xmlMap.put("loop2.xml", "<nest2 xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='loop2.xml'/>"
+                + "</nest2>");
+        xmlMap.put("loop3.xml", "<not-a-loop xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='three.xml'/>"
+                + "  <xi:include href='three.xml'/>"
+                + "</not-a-loop>");
+        xmlMap.put("icheck1.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='one.txt' xpointer='text(char=0,4;length=18)' parse='text'/>"
+                + "</doc>");
+        xmlMap.put("icheck2.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='one.txt' xpointer='text(char=0,4;length=1000000)' parse='text'/>"
+                + "</doc>");
+        xmlMap.put("icheck3.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='one.txt' xpointer='text(char=0,4;length=1000000)' parse='text'>"
+                + "<xi:fallback>"
+                + "<xi:include href='one.txt' xpointer='text(char=0,4;length=18)' parse='text'/>"
+                + "</xi:fallback>"
+                + "</xi:include>"
+                + "</doc>");
+        xmlMap.put("icheck4.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='one.txt' xpointer='text(char=0,4;unknown-integrity-check=12; length=18,  utf-8)' parse='text'/>"
+                + "</doc>");
+        xmlMap.put("icheck5.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='one.txt' xpointer='text(char=0,4;md5=fc8850705bc913a80edcc0dea2c300f1)' parse='text'/>"
+                + "</doc>");
+        xmlMap.put("icheck6.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='one.txt' xpointer='text(char=0,4;length=10000,ISO-8859-1)' parse='text'/>"
+                + "</doc>");
     }
 
     private static Map<String, String> textMap = null;
@@ -127,10 +167,36 @@ public class FakeDocumentResolver implements DocumentResolver {
         expandedMap.put("fourteen.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  <p xml:base='http://example.com/docs/onefr.xml'>Paragraphe trois.</p>"
                 + "</doc>");
+        expandedMap.put("nest1.xml", "<nest1 xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <nest2 xml:base='http://example.com/docs/nest2.xml'>"
+                + "  <nest3 xml:base='http://example.com/docs/nest3.xml'/>"
+                + "</nest2>"
+                + "</nest1>");
+        expandedMap.put("loop3.xml", "<not-a-loop xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <doc xml:base='http://example.com/docs/three.xml'>Document three.</doc>"
+                + "  <doc xml:base='http://example.com/docs/three.xml'>Document three.</doc>"
+                + "</not-a-loop>");
+        expandedMap.put("icheck1.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  This"
+                + "</doc>");
+        expandedMap.put("icheck3.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  This"
+                + "</doc>");
+        expandedMap.put("icheck4.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  This"
+                + "</doc>");
+        expandedMap.put("icheck5.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  This"
+                + "</doc>");
+        expandedMap.put("icheck6.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  This"
+                + "</doc>");
     }
 
     @Override
     public XdmNode resolveXml(XdmNode base, String uri, String accept, String acceptLanguage) {
+        Logger logger = base.getProcessor().getUnderlyingConfiguration().getLogger();
+        logger.info("Resolving XML XInclude: " + uri + " (" + base.getBaseURI().resolve(uri).toASCIIString() + ")");
         if (xmlMap.containsKey(uri)) {
             try {
                 String text = xmlMap.get(uri);
@@ -152,6 +218,8 @@ public class FakeDocumentResolver implements DocumentResolver {
 
     @Override
     public XdmNode resolveText(XdmNode base, String uri, String accept, String acceptLanguage) {
+        Logger logger = base.getProcessor().getUnderlyingConfiguration().getLogger();
+        logger.info("Resolving text XInclude: " + uri + " (" + base.getBaseURI().resolve(uri).toASCIIString() + ")");
         if (textMap.containsKey(uri)) {
             String text = textMap.get(uri);
             XdmDestination destination = new XdmDestination();

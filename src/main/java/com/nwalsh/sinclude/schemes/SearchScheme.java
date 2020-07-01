@@ -1,6 +1,7 @@
 package com.nwalsh.sinclude.schemes;
 
 import com.nwalsh.sinclude.exceptions.MalformedXPointerSchemeException;
+import com.nwalsh.sinclude.exceptions.XIncludeIntegrityCheckException;
 import com.nwalsh.sinclude.xpointer.DefaultSelectionResult;
 import com.nwalsh.sinclude.xpointer.Scheme;
 import com.nwalsh.sinclude.xpointer.SchemeData;
@@ -189,7 +190,7 @@ public class SearchScheme extends AbstractTextScheme implements TextScheme {
         String text = getText(document);
 
         if (checkLen >= 0 && checkLen != text.length()) {
-            throw new IllegalArgumentException("Integrity check failed: " + checkLen + " != " + text.length());
+            throw new XIncludeIntegrityCheckException("Integrity check failed: " + checkLen + " != " + text.length());
         }
 
         String[] lines = text.split("\n");

@@ -1,6 +1,7 @@
 package com.nwalsh.sinclude;
 
 import com.nwalsh.sinclude.xpointer.FragmentIdParser;
+import com.nwalsh.sinclude.xpointer.ParseType;
 import com.nwalsh.sinclude.xpointer.Scheme;
 import com.nwalsh.sinclude.xpointer.SchemeData;
 import com.nwalsh.sinclude.xpointer.SelectionResult;
@@ -61,7 +62,7 @@ public class SchemeXPathTest extends TestCase {
     }
 
     public void testId() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("xml", "xpath(id^('one'^))");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, "xpath(id^('one'^))");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -78,14 +79,14 @@ public class SchemeXPathTest extends TestCase {
     }
 
     public void testIdFail() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("xml", "xpath(id^('no-such-id'^))");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, "xpath(id^('no-such-id'^))");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertFalse(result.finished());
         assertNull(result.getResult());
     }
 
     public void testElement() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("xml", "xpath(/*/p)");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, "xpath(/*/p)");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -103,11 +104,11 @@ public class SchemeXPathTest extends TestCase {
 
     public void testNsElement() {
         String xmlns = "xmlns(p=http://example.com/p)";
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("xml", xmlns);
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, xmlns);
         SelectionResult result = schemes[0].select(new SchemeData[]{}, null);
 
         String xpath = "xpath(/*/p:p)";
-        schemes = fragidParser.parseFragmentIdentifier("xml", xpath);
+        schemes = fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, xpath);
         result = schemes[0].select(result.getSchemeData(), document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());

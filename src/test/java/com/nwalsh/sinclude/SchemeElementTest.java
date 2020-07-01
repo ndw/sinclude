@@ -1,6 +1,7 @@
 package com.nwalsh.sinclude;
 
 import com.nwalsh.sinclude.xpointer.FragmentIdParser;
+import com.nwalsh.sinclude.xpointer.ParseType;
 import com.nwalsh.sinclude.xpointer.Scheme;
 import com.nwalsh.sinclude.xpointer.SchemeData;
 import com.nwalsh.sinclude.xpointer.SelectionResult;
@@ -61,7 +62,7 @@ public class SchemeElementTest extends TestCase {
     }
 
     public void testId() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("xml", "one");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, "one");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -78,7 +79,7 @@ public class SchemeElementTest extends TestCase {
     }
 
     public void testTumble() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("xml", "/1/2/1");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, "/1/2/1");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -95,7 +96,7 @@ public class SchemeElementTest extends TestCase {
     }
 
     public void testIdTumble() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("xml", "i1/2/1");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, "i1/2/1");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -112,21 +113,21 @@ public class SchemeElementTest extends TestCase {
     }
 
     public void testIdFail() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("xml", "no-such-id");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, "no-such-id");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertFalse(result.finished());
         assertNull(result.getResult());
     }
 
     public void testTumbleFail() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("xml", "/1/99/99");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, "/1/99/99");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertFalse(result.finished());
         assertNull(result.getResult());
     }
 
     public void testIdTumbleFail() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("xml", "i1/3/4");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, "i1/3/4");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertFalse(result.finished());
         assertNull(result.getResult());

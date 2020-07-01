@@ -1,5 +1,6 @@
 package com.nwalsh.sinclude;
 
+import com.nwalsh.sinclude.exceptions.XIncludeIOException;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.expr.parser.Loc;
@@ -31,7 +32,7 @@ public class DefaultDocumentResolver implements DocumentResolver {
             Source source = resolver.resolve(uri, base.getBaseURI().toASCIIString());
             return builder.build(source);
         } catch (TransformerException | SaxonApiException e) {
-            throw new RuntimeException(e);
+            throw new XIncludeIOException(e);
         }
     }
 
@@ -62,10 +63,10 @@ public class DefaultDocumentResolver implements DocumentResolver {
                 receiver.close();
                 return destination.getXdmNode();
             } catch (XPathException e) {
-                throw new RuntimeException(e);
+                throw new XIncludeIOException(e);
             }
         } catch (TransformerException | IOException e) {
-            throw new RuntimeException(e);
+            throw new XIncludeIOException(e);
         }
     }
 }

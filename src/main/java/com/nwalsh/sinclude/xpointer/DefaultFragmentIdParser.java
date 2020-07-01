@@ -4,6 +4,7 @@ import com.nwalsh.sinclude.XInclude;
 import com.nwalsh.sinclude.exceptions.MalformedXPointerSchemeException;
 import com.nwalsh.sinclude.exceptions.UnknownXPointerSchemeException;
 import com.nwalsh.sinclude.exceptions.UnparseableXPointerSchemeException;
+import com.nwalsh.sinclude.exceptions.XIncludeSyntaxException;
 import com.nwalsh.sinclude.schemes.ElementScheme;
 import net.sf.saxon.s9api.ItemType;
 import net.sf.saxon.s9api.ItemTypeFactory;
@@ -27,14 +28,14 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
     }
 
     @Override
-    public Scheme[] parseFragmentIdentifier(String parseType, String fragid) {
+    public Scheme[] parseFragmentIdentifier(ParseType parseType, String fragid) {
         switch (parseType) {
-            case "xml":
+            case XMLPARSE:
                 return parseXmlFragid(fragid);
-            case "text":
+            case TEXTPARSE:
                 return parseTextFragid(fragid);
             default:
-                throw new IllegalArgumentException("Only 'text' or 'xml' fragment identifiers are supported");
+                throw new XIncludeSyntaxException("Only 'text' or 'xml' fragment identifiers are supported");
         }
     }
 
@@ -49,6 +50,7 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
                 if (scheme instanceof XmlScheme) {
                     return new Scheme[] { ((XmlScheme) scheme).newInstance(fragid, xinclude.getFixupXmlBase(), xinclude.getFixupXmlLang()) };
                 }
+                // Programmer error, someone's extended the set of scheme types in an incomplete way
                 throw new RuntimeException("Unexpected scheme type in parseXmlFragid");
             } else {
                 throw new UnknownXPointerSchemeException("Unknown scheme: element");
@@ -65,6 +67,7 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
                 if (scheme instanceof XmlScheme) {
                     return new Scheme[] { ((XmlScheme) scheme).newInstance(fragid, xinclude.getFixupXmlBase(), xinclude.getFixupXmlLang()) };
                 }
+                // Programmer error, someone's extended the set of scheme types in an incomplete way
                 throw new RuntimeException("Unexpected scheme type in parseXmlFragid");
             } else {
                 throw new UnknownXPointerSchemeException("Unknown scheme: element");
@@ -94,7 +97,8 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
                 if (scheme instanceof TextScheme) {
                     return new Scheme[] { ((TextScheme) scheme).newInstance(fragid) };
                 }
-                throw new RuntimeException("Unexpected scheme type in parseXmlFragid");
+                // Programmer error, someone's extended the set of scheme types in an incomplete way
+                throw new RuntimeException("Unexpected scheme type in parseTextFragid");
             } else {
                 throw new UnknownXPointerSchemeException("Unknown scheme: text");
             }
@@ -104,7 +108,8 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
                 if (scheme instanceof TextScheme) {
                     return new Scheme[] { ((TextScheme) scheme).newInstance(fragid) };
                 }
-                throw new RuntimeException("Unexpected scheme type in parseXmlFragid");
+                // Programmer error, someone's extended the set of scheme types in an incomplete way
+                throw new RuntimeException("Unexpected scheme type in parseTextFragid");
             } else {
                 throw new UnknownXPointerSchemeException("Unknown scheme: text");
             }
@@ -115,13 +120,22 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
                 if (scheme instanceof TextScheme) {
                     return new Scheme[] { ((TextScheme) scheme).newInstance(fragid.substring(pos+1)) };
                 }
-                throw new RuntimeException("Unexpected scheme type in parseXmlFragid");
+                // Programmer error, someone's extended the set of scheme types in an incomplete way
+                throw new RuntimeException("Unexpected scheme type in parseTextFragid");
             } else {
                 throw new UnknownXPointerSchemeException("Unknown scheme: text");
             }
-        } else {
-            throw new UnparseableXPointerSchemeException("Unparsable: " + fragid);
         }
+
+        // scheme(...) ...
+        Vector<Scheme> schemes = new Vector<Scheme>();
+        SchemeParser parser = new SchemeParser(fragid);
+        while (parser.hasMore()) {
+            schemes.add(parser.next());
+        }
+        Scheme[] array = new Scheme[schemes.size()];
+        schemes.toArray(array);
+        return array;
     }
 
     private class SchemeParser {
@@ -168,7 +182,8 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
                     if (scheme instanceof TextScheme) {
                         return ((TextScheme) scheme).newInstance(data.toString());
                     }
-                    throw new RuntimeException("Unexpected scheme type in parseXmlFragid");
+                    // Programmer error, someone's extended the set of scheme types in an incomplete way
+                    throw new RuntimeException("Unexpected scheme type");
                 } else {
                     throw new UnknownXPointerSchemeException("Unknown scheme: " + name);
                 }

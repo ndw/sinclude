@@ -1,5 +1,6 @@
 package com.nwalsh.sinclude.schemes;
 
+import com.nwalsh.sinclude.exceptions.XIncludeIOException;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.event.ReceiverOption;
@@ -50,7 +51,8 @@ public abstract class AbstractXmlScheme {
         Receiver receiver = destination.getReceiver(pipe, new SerializationProperties());
 
         if (node.getNodeKind() != XdmNodeKind.ELEMENT) {
-            throw new IllegalArgumentException("You can only fixup elements");
+            // This is an internal error and should never happen
+            throw new IllegalArgumentException("XInclude scheme fixup can only be applied to elements");
         }
 
         try {
@@ -91,7 +93,7 @@ public abstract class AbstractXmlScheme {
             XdmSequenceIterator<XdmNode> iter = document.axisIterator(Axis.CHILD);
             return iter.next();
         } catch (XPathException e) {
-            throw new RuntimeException(e);
+            throw new XIncludeIOException(e);
         }
     }
 }

@@ -2,6 +2,7 @@ package com.nwalsh.sinclude.schemes;
 
 import com.nwalsh.sinclude.data.XmlnsData;
 import com.nwalsh.sinclude.exceptions.MalformedXPointerSchemeException;
+import com.nwalsh.sinclude.exceptions.XIncludeIOException;
 import com.nwalsh.sinclude.xpointer.DefaultSelectionResult;
 import com.nwalsh.sinclude.xpointer.Scheme;
 import com.nwalsh.sinclude.xpointer.SchemeData;
@@ -105,7 +106,7 @@ public class XPathScheme extends AbstractXmlScheme implements XmlScheme {
                         results.add(node);
                     }
                 } else {
-                    throw new RuntimeException("XPath matched non-node item?: " + schemeName() + "(" + xpath + ")");
+                    throw new XIncludeIOException("XPath matched non-node item?: " + schemeName() + "(" + xpath + ")");
                 }
             }
 
@@ -133,7 +134,7 @@ public class XPathScheme extends AbstractXmlScheme implements XmlScheme {
                 return new DefaultSelectionResult(true, destination.getXdmNode());
             }
         } catch (SaxonApiException | XPathException e) {
-            throw new UnsupportedOperationException(e);
+            throw new XIncludeIOException(e);
         }
     }
 }

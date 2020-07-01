@@ -1,6 +1,7 @@
 package com.nwalsh.sinclude;
 
 import com.nwalsh.sinclude.xpointer.FragmentIdParser;
+import com.nwalsh.sinclude.xpointer.ParseType;
 import com.nwalsh.sinclude.xpointer.Scheme;
 import com.nwalsh.sinclude.xpointer.SchemeData;
 import com.nwalsh.sinclude.xpointer.SelectionResult;
@@ -67,7 +68,7 @@ public class SchemeSearchTest extends TestCase {
     }
 
     public void testSearchFoundStart() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "search=/twenty/");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "search=/twenty/");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -77,7 +78,7 @@ public class SchemeSearchTest extends TestCase {
     }
 
     public void testSearchFoundEnd() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "search=,/one/");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "search=,/one/");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -87,7 +88,7 @@ public class SchemeSearchTest extends TestCase {
     }
 
     public void testSearchFoundStartEnd() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "search=/one/,/four/");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "search=/one/,/four/");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -97,7 +98,7 @@ public class SchemeSearchTest extends TestCase {
     }
 
     public void testSearchFoundStartEnd2() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "search=2/four/,/six/");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "search=2/four/,/six/");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -107,7 +108,7 @@ public class SchemeSearchTest extends TestCase {
     }
 
     public void testSearchFoundAfter() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "search=/one/;after,/six/");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "search=/one/;after,/six/");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -117,7 +118,7 @@ public class SchemeSearchTest extends TestCase {
     }
 
     public void testSearchFoundAfterTrim() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "search=/one/;trim,/six/");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "search=/one/;trim,/six/");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -127,7 +128,7 @@ public class SchemeSearchTest extends TestCase {
     }
 
     public void testSearchFoundBefore() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "search=/one/,/six/;before");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "search=/one/,/six/;before");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -137,7 +138,7 @@ public class SchemeSearchTest extends TestCase {
     }
 
     public void testSearchFoundBeforeTrim() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "search=/one/,/six/;trim");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "search=/one/,/six/;trim");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -147,7 +148,7 @@ public class SchemeSearchTest extends TestCase {
     }
 
     public void testSearchFoundBeforeAfterTrim() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "search=/one/;trim,/six/;trim");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "search=/one/;trim,/six/;trim");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -157,7 +158,7 @@ public class SchemeSearchTest extends TestCase {
     }
 
     public void testSearchFoundStrip() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "search=/six/,/twelve/;strip");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "search=/six/,/twelve/;strip");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -175,7 +176,7 @@ public class SchemeSearchTest extends TestCase {
     }
 
     public void testSearchFoundAfterStrip() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "search=/six/;trim,/twelve/;strip");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "search=/six/;trim,/twelve/;strip");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -191,7 +192,7 @@ public class SchemeSearchTest extends TestCase {
     }
 
     public void testSearchFoundBeforeAfterStrip() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "search=/six/;trim,/twelve/;trim;strip");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "search=/six/;trim,/twelve/;trim;strip");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());
@@ -205,7 +206,7 @@ public class SchemeSearchTest extends TestCase {
     }
 
     public void testSearchFoundAfterNoStrip() {
-        Scheme[] schemes = fragidParser.parseFragmentIdentifier("text", "search=/six/;trim,/twelve/;trim");
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.TEXTPARSE, "search=/six/;trim,/twelve/;trim");
         SelectionResult result = schemes[0].select(new SchemeData[]{}, document);
         assertTrue(result.finished());
         assertNotNull(result.getResult());

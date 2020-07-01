@@ -1,5 +1,8 @@
 package com.nwalsh.sinclude;
 
+import com.nwalsh.sinclude.exceptions.XIncludeIntegrityCheckException;
+import com.nwalsh.sinclude.exceptions.XIncludeLoopException;
+import com.nwalsh.sinclude.exceptions.XIncludeNoFragmentException;
 import junit.framework.TestCase;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
@@ -155,5 +158,57 @@ public class XIncludeTest extends TestCase {
         }
 
         assertTrue(pass);
+    }
+
+    public void testXmlIncludeNest1() {
+        compareDocs("nest1.xml");
+    }
+
+    public void testXmlIncludeLoop1() {
+        try {
+            compareDocs("loop1.xml");
+            fail();
+        } catch (XIncludeLoopException le) {
+            // ok
+        } catch (Throwable cause) {
+            fail();
+        }
+    }
+
+    public void testXmlIncludeLoop2() {
+        compareDocs("loop3.xml");
+    }
+
+    public void testXmlIncludeICheck1() {
+        compareDocs("icheck1.xml");
+    }
+
+    public void testXmlIncludeICheck2() {
+        try {
+            compareDocs("icheck2.xml");
+            fail();
+        } catch (XIncludeNoFragmentException nfe) {
+            if (! (nfe.getCause() instanceof XIncludeIntegrityCheckException)) {
+                fail();
+            }
+        } catch (Throwable cause) {
+            fail();
+        }
+    }
+
+    public void testXmlIncludeICheck3() {
+        compareDocs("icheck3.xml");
+    }
+
+    public void testXmlIncludeICheck4() {
+        compareDocs("icheck4.xml");
+    }
+
+    public void testXmlIncludeICheck5() {
+        compareDocs("icheck5.xml");
+    }
+
+    public void testXmlIncludeICheck6() {
+        compareDocs("icheck5.xml");
     }
 }

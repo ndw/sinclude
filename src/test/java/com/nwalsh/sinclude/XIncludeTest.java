@@ -211,4 +211,12 @@ public class XIncludeTest extends TestCase {
     public void testXmlIncludeICheck6() {
         compareDocs("icheck5.xml");
     }
+
+    public void testXmlIncludeSelfRef() {
+        compareDocs("selfref.xml");
+    }
+
+    public void testEscapeText() {
+        compareDocs("escapetext.xml");
+    }
 }

@@ -118,32 +118,41 @@ public class FakeDocumentResolver implements DocumentResolver {
         xmlMap.put("icheck6.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  <xi:include href='one.txt' xpointer='text(char=0,4;length=10000,ISO-8859-1)' parse='text'/>"
                 + "</doc>");
+        xmlMap.put("selfref.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='' xpointer='two' set-xml-id='one'/>"
+                + "  <p xml:id='two'>This is a paragraph.</p>"
+                + "</doc>");
+        xmlMap.put("escapetext.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='three.xml' parse='text'/>"
+                + "</doc>");
+
     }
 
     private static Map<String, String> textMap = null;
     static {
         textMap = new HashMap<>();
         textMap.put("one.txt", "This is line one.\n");
+        textMap.put("three.xml", "<doc>Document three.</doc>");
     }
 
     private static Map<String, String> expandedMap = null;
     static {
         expandedMap = new HashMap<>();
         expandedMap.put("two.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
-                    + "  <doc xml:base='http://example.com/docs/three.xml'>Document three.</doc>"
-                    + "</doc>");
+                + "  <doc xml:base='http://example.com/docs/three.xml'>Document three.</doc>"
+                + "</doc>");
         expandedMap.put("four.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
-                    + "  <p xml:id='one' xml:base='http://example.com/docs/one.xml'>Paragraph one.</p>"
-                    + "</doc>");
+                + "  <p xml:id='one' xml:base='http://example.com/docs/one.xml'>Paragraph one.</p>"
+                + "</doc>");
         expandedMap.put("five.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
-                    + "  <p xmlns='http://example.com/' xml:base='http://example.com/docs/one.xml'>Paragraph two.</p>"
-                    + "</doc>");
+                + "  <p xmlns='http://example.com/' xml:base='http://example.com/docs/one.xml'>Paragraph two.</p>"
+                + "</doc>");
         expandedMap.put("six.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
-                    + "  one"
-                    + "</doc>");
+                + "  one"
+                + "</doc>");
         expandedMap.put("seven.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
-                    + "  line"
-                    + "</doc>");
+                + "  line"
+                + "</doc>");
         expandedMap.put("eight.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  fallback"
                 + "</doc>");
@@ -191,9 +200,17 @@ public class FakeDocumentResolver implements DocumentResolver {
         expandedMap.put("icheck6.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  This"
                 + "</doc>");
+        // FIXME: technically the xml:base isn't needed here; is it worth trying to avoid generating it?
+        expandedMap.put("selfref.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <p xml:id='one' xml:base='http://example.com/docs/selfref.xml'>This is a paragraph.</p>"
+                + "  <p xml:id='two'>This is a paragraph.</p>"
+                + "</doc>");
+        expandedMap.put("escapetext.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  &lt;doc&gt;Document three.&lt;/doc&gt;"
+                + "</doc>");
     }
 
-    @Override
+        @Override
     public XdmNode resolveXml(XdmNode base, String uri, String accept, String acceptLanguage) {
         Logger logger = base.getProcessor().getUnderlyingConfiguration().getLogger();
         logger.info("Resolving XML XInclude: " + uri + " (" + base.getBaseURI().resolve(uri).toASCIIString() + ")");

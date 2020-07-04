@@ -287,18 +287,20 @@ public class XInclude {
 
             XdmNode doc = null;
             try {
-                if (!"".equals(href)) {
+                if ("".equals(href)) {
+                    doc = node;
+                } else {
                     URI next = node.getBaseURI().resolve(href);
                     if (uriStack.contains(next)) {
                         throw new XIncludeLoopException("XInclude loops: " + next.toASCIIString());
                     }
                     uriStack.push(next);
-                }
 
-                if (parse == ParseType.TEXTPARSE) {
-                    doc = resolver.resolveText(node, href, accept, accept_lang);
-                } else {
-                    doc = resolver.resolveXml(node, href, accept, accept_lang);
+                    if (parse == ParseType.TEXTPARSE) {
+                        doc = resolver.resolveText(node, href, accept, accept_lang);
+                    } else {
+                        doc = resolver.resolveXml(node, href, accept, accept_lang);
+                    }
                 }
 
                 if (xptr != null) {
@@ -342,7 +344,9 @@ public class XInclude {
             XInclude nested = xinclude.newInstance();
             doc = fixup(doc, setId);
             doc = nested.expandXIncludes(doc);
-            uriStack.pop();
+            if (!"".equals(href)) {
+                uriStack.pop();
+            }
             return doc;
         }
 

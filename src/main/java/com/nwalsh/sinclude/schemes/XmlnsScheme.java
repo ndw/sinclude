@@ -1,5 +1,6 @@
 package com.nwalsh.sinclude.schemes;
 
+import com.nwalsh.sinclude.XInclude;
 import com.nwalsh.sinclude.data.XmlnsData;
 import com.nwalsh.sinclude.exceptions.MalformedXPointerSchemeException;
 import com.nwalsh.sinclude.xpointer.DefaultSelectionResult;
@@ -16,7 +17,7 @@ public class XmlnsScheme implements XmlScheme {
     private XmlnsData data = null;
 
     @Override
-    public XmlnsScheme newInstance(String fdata, boolean fixupBase, boolean fixupLang) {
+    public XmlnsScheme newInstance(String fdata, XInclude xinclude) {
         XmlnsData data = null;
         Matcher matcher = nsRE.matcher(fdata);
         if (matcher.find()) {

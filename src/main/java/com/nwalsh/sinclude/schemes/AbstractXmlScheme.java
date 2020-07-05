@@ -1,5 +1,6 @@
 package com.nwalsh.sinclude.schemes;
 
+import com.nwalsh.sinclude.XInclude;
 import com.nwalsh.sinclude.exceptions.XIncludeIOException;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
@@ -7,10 +8,8 @@ import net.sf.saxon.event.ReceiverOption;
 import net.sf.saxon.expr.parser.Loc;
 import net.sf.saxon.om.AttributeInfo;
 import net.sf.saxon.om.AttributeMap;
-import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.om.FingerprintedQName;
 import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.NodeName;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmDestination;
@@ -22,19 +21,17 @@ import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.BuiltInAtomicType;
 
 import javax.xml.XMLConstants;
-import java.util.HashSet;
 
 public abstract class AbstractXmlScheme {
     public static final QName xml_lang = new QName("xml", XMLConstants.XML_NS_URI, "lang");
     public static final QName xml_base = new QName("xml", XMLConstants.XML_NS_URI, "base");
 
-    protected boolean fixupLang = false;
-    protected boolean fixupBase = false;
-
     private static final FingerprintedQName fq_xml_lang =
             new FingerprintedQName(xml_lang.getPrefix(), xml_lang.getNamespaceURI(), xml_lang.getLocalName());
     private static final FingerprintedQName fq_xml_base =
             new FingerprintedQName(xml_base.getPrefix(), xml_base.getNamespaceURI(), xml_base.getLocalName());
+
+    protected XInclude xinclude = null;
 
     public String getLang(XdmNode node) {
         String lang = null;
@@ -45,7 +42,16 @@ public abstract class AbstractXmlScheme {
         return lang;
     }
 
-    protected XdmNode fixup(XdmNode node, boolean fixupBase, String lang) {
+    protected XdmNode fixup(XdmNode node) {
+        if (!xinclude.getFixupXmlBase() && !xinclude.getFixupXmlLang()) {
+            return node;
+        }
+
+        String lang = null;
+        if (xinclude.getFixupXmlLang() && node.getAttributeValue(xml_lang) == null) {
+            lang = getLang(node);
+        }
+
         XdmDestination destination = new XdmDestination();
         PipelineConfiguration pipe = node.getUnderlyingNode().getConfiguration().makePipelineConfiguration();
         Receiver receiver = destination.getReceiver(pipe, new SerializationProperties());
@@ -61,7 +67,7 @@ public abstract class AbstractXmlScheme {
 
             AttributeMap attributes = node.getUnderlyingNode().attributes();
 
-            if (fixupBase && node.getBaseURI() != null) {
+            if (xinclude.getFixupXmlBase() && node.getBaseURI() != null) {
                 AttributeInfo base = new AttributeInfo(fq_xml_base,
                         BuiltInAtomicType.UNTYPED_ATOMIC,
                         node.getBaseURI().toASCIIString(),

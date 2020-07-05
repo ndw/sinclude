@@ -219,4 +219,22 @@ public class XIncludeTest extends TestCase {
     public void testEscapeText() {
         compareDocs("escapetext.xml");
     }
+
+    public void testTextIntegrity() {
+        compareDocs("textintegrity.xml");
+    }
+
+    public void testTextIntegrityFail() {
+        try {
+            compareDocs("textintegrityfail.xml");
+            fail();
+        } catch (XIncludeNoFragmentException nfe) {
+            if (! (nfe.getCause() instanceof XIncludeIntegrityCheckException)) {
+                fail();
+            }
+        } catch (Throwable cause) {
+            fail();
+        }
+
+    }
 }

@@ -125,6 +125,12 @@ public class FakeDocumentResolver implements DocumentResolver {
         xmlMap.put("escapetext.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  <xi:include href='three.xml' parse='text'/>"
                 + "</doc>");
+        xmlMap.put("textintegrity.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='one.txt' parse='text' xpointer='line=0,;length=18'/>"
+                + "</doc>");
+        xmlMap.put("textintegrityfail.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='one.txt' parse='text' xpointer='line=0,;length=10000'/>"
+                + "</doc>");
 
     }
 
@@ -207,6 +213,9 @@ public class FakeDocumentResolver implements DocumentResolver {
                 + "</doc>");
         expandedMap.put("escapetext.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  &lt;doc&gt;Document three.&lt;/doc&gt;"
+                + "</doc>");
+        expandedMap.put("textintegrity.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  This is line one.\n"
                 + "</doc>");
     }
 

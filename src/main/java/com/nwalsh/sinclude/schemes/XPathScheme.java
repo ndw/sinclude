@@ -1,5 +1,6 @@
 package com.nwalsh.sinclude.schemes;
 
+import com.nwalsh.sinclude.XInclude;
 import com.nwalsh.sinclude.data.XmlnsData;
 import com.nwalsh.sinclude.exceptions.MalformedXPointerSchemeException;
 import com.nwalsh.sinclude.exceptions.XIncludeIOException;
@@ -30,11 +31,10 @@ public class XPathScheme extends AbstractXmlScheme implements XmlScheme {
     protected String xpath = null;
 
     @Override
-    public XPathScheme newInstance(String fdata, boolean fixupBase, boolean fixupLang) {
+    public XPathScheme newInstance(String fdata, XInclude xinclude) {
         XPathScheme scheme = new XPathScheme();
         scheme.xpath = fdata;
-        scheme.fixupLang = fixupLang;
-        scheme.fixupBase = fixupBase;
+        scheme.xinclude = xinclude;
         return scheme;
     }
 
@@ -91,17 +91,7 @@ public class XPathScheme extends AbstractXmlScheme implements XmlScheme {
                     }
 
                     if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
-                        boolean fixup = fixupBase;
-                        String lang = null;
-                        if (fixupLang && node.getAttributeValue(xml_lang) == null) {
-                            lang = getLang(node);
-                            fixup = fixup || (lang != null);
-                        }
-                        if (fixup) {
-                            results.add(fixup(node, fixupBase, lang));
-                        } else {
-                            results.add(node);
-                        }
+                        results.add(fixup(node));
                     } else {
                         results.add(node);
                     }

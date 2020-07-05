@@ -48,7 +48,7 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
             Scheme scheme = xinclude.getScheme("element");
             if (scheme != null) {
                 if (scheme instanceof XmlScheme) {
-                    return new Scheme[] { ((XmlScheme) scheme).newInstance(fragid, xinclude.getFixupXmlBase(), xinclude.getFixupXmlLang()) };
+                    return new Scheme[] { ((XmlScheme) scheme).newInstance(fragid, xinclude) };
                 }
                 // Programmer error, someone's extended the set of scheme types in an incomplete way
                 throw new RuntimeException("Unexpected scheme type in parseXmlFragid");
@@ -65,7 +65,7 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
             Scheme scheme = xinclude.getScheme("element");
             if (scheme != null) {
                 if (scheme instanceof XmlScheme) {
-                    return new Scheme[] { ((XmlScheme) scheme).newInstance(fragid, xinclude.getFixupXmlBase(), xinclude.getFixupXmlLang()) };
+                    return new Scheme[] { ((XmlScheme) scheme).newInstance(fragid, xinclude) };
                 }
                 // Programmer error, someone's extended the set of scheme types in an incomplete way
                 throw new RuntimeException("Unexpected scheme type in parseXmlFragid");
@@ -177,7 +177,7 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
                 Scheme scheme = xinclude.getScheme(name);
                 if (scheme != null) {
                     if (scheme instanceof XmlScheme) {
-                        return ((XmlScheme) scheme).newInstance(data.toString(), xinclude.getFixupXmlBase(), xinclude.getFixupXmlLang());
+                        return ((XmlScheme) scheme).newInstance(data.toString(), xinclude);
                     }
                     if (scheme instanceof TextScheme) {
                         return ((TextScheme) scheme).newInstance(data.toString());

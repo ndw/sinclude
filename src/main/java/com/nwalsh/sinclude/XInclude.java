@@ -328,7 +328,7 @@ public class XInclude {
                     }
                     if (!success) {
                         if (lastException != null) {
-                            throw new XIncludeNoFragmentException("Failed to locate fragment: " + xptr, lastException);
+                            throw new XIncludeNoFragmentException("Failed to locate fragment: " + xptr + " (" + lastException.getMessage() + ")", lastException);
                         }
                         throw new XIncludeNoFragmentException("Failed to locate fragment: " + xptr);
                     }

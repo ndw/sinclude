@@ -1,5 +1,6 @@
 package com.nwalsh.sinclude.schemes;
 
+import com.nwalsh.sinclude.XInclude;
 import com.nwalsh.sinclude.exceptions.MalformedXPointerSchemeException;
 import com.nwalsh.sinclude.exceptions.XIncludeIOException;
 import com.nwalsh.sinclude.xpointer.SchemeData;
@@ -13,12 +14,11 @@ public class ElementScheme extends XPathScheme {
     private String fragid = null;
 
     @Override
-    public ElementScheme newInstance(String fdata, boolean fixupBase, boolean fixupLang) {
+    public ElementScheme newInstance(String fdata, XInclude xinclude) {
         ElementScheme scheme = new ElementScheme();
+        scheme.xinclude = xinclude;
         scheme.fragid = fdata;
         scheme.xpath = toXPath(fdata);
-        scheme.fixupBase = fixupBase;
-        scheme.fixupLang = fixupLang;
         return scheme;
     }
 

@@ -45,7 +45,8 @@ Then you can call the extension function:
 You can use ~function-available()~ to code more defensively. The options
 map is a map from QName keys to values. Only two keys are recognized:
 ~fixup-xml-base~ and ~fixup-xml-lang~, both in no namespace. The default
-value for each is “true”.
+value for each is “true”. You can omit the second argument entirely if
+you’re happy with those defaults.
 
 * XPointer schemes
 

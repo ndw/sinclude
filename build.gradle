@@ -43,6 +43,38 @@ jar {
   }
 }
 
+task distCopyJar(type: Copy, dependsOn: ['jar']) {
+  from "${buildDir}/libs/${basename}-${sincludeVersion}.jar"
+  into "${buildDir}/${basename}-${sincludeVersion}/lib"
+  doFirst {
+    mkdir "${buildDir}/${basename}-${sincludeVersion}/lib"
+  }
+}
+
+task distCopyReadme(type: Copy) {
+  from "README.org"
+  into "${buildDir}/${basename}-${sincludeVersion}"
+  doFirst {
+    mkdir "${buildDir}/${basename}-${sincludeVersion}"
+  }
+}
+
+task zipDist(type: Zip,
+             dependsOn: ['distCopyReadme', 'distCopyJar']) {
+  from("${buildDir}/${basename}-${sincludeVersion}")
+  into "${basename}-${sincludeVersion}"
+  archiveFileName = "${basename}-${sincludeVersion}.zip"
+  doFirst {
+    mkdir "${buildDir}/distributions"
+  }
+}
+
+task dist(dependsOn: ['test', 'zipDist']) {
+  doLast {
+    println("Built dist for ${basename} version ${sincludeVersion}")
+  }
+}
+
 // ============================================================
 
 task helloWorld() {

@@ -1,9 +1,7 @@
-# sinclude
+* Saxon XInclude Processor
 
-Saxon 10.x XInclude processor
-
-This is an XInclude processor that operates on the Saxon data model.
-It is not a streaming processor.
+This is an [[http://www.w3.org/TR/xinclude][XInclude]] processor. It operates on the Saxon data model; it
+is not a streaming processor.
 
 #+BEGIN_SRC java
 XdmNode document = … // You got a document from somewhere, right?
@@ -17,3 +15,43 @@ identifier schemes.
 I tried to build it in an extensible, pluggable way so that new
 schemes could be added with relative ease, but that may be a bit
 aspirational.
+
+* Extension function
+
+You can use this XInclude implementation from XSLT as an extension
+function. Pass the command line option ~-init:com.nwalsh.xslt.Register~
+to Saxon to register the extension function. (If you’re running Saxon
+in some other context, arrange to have the function registered).
+
+In your stylesheet, declare the extension namespace:
+
+#+BEGIN_SRC xml
+<?xml version="1.0" encoding="utf-8"?>
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+
+                xmlns:ext="http://nwalsh.com/xslt"
+
+                xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                exclude-result-prefixes="ext xs"
+                version="3.0">
+#+END_SRC
+
+Then you can call the extension function:
+
+#+BEGIN_SRC xml
+<xsl:sequence select="ext:xinclude($node, $options)"/>
+#+END_SRC
+
+You can use ~function-available()~ to code more defensively. The options
+map is a map from QName keys to values. Only two keys are recognized:
+~fixup-xml-base~ and ~fixup-xml-lang~, both in no namespace. The default
+value for each is “true”.
+
+* XPointer schemes
+
+The standard [[https://www.w3.org/TR/xptr-xmlns/][xmlns()]] and [[https://www.w3.org/TR/xptr-element/][element()]] schemes are supported for XML parsing. An
+xpath() scheme is also supported. It evaluates an XPath expression against the document.
+
+For text documents, [[https://tools.ietf.org/html/rfc5147][RFC 5147]] fragment identifiers are supported. My
+own “[[https://norman.walsh.name/2016/09/29/search][search]]” scheme is also supported. The GitHub scheme: L​/start/-L​/end/
+(for example ~L5-L10~ for lines 5-10) is also supported.

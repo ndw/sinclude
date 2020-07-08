@@ -1,3 +1,7 @@
+# Java Gradle CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-java/ for more details
+#
 version: 2
 jobs:
   build:
@@ -26,4 +30,47 @@ jobs:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
 
-      - run: ./gradlew test
+      - run: ./gradlew dist
+
+      - persist_to_workspace:
+          root: build
+          paths:
+            - distributions
+
+  publish-github-release:
+    docker:
+      - image: cibuilds/github:0.10
+    steps:
+      - attach_workspace:
+          at: ./artifacts
+      - run: ls -lR
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            VERSION=${CIRCLE_TAG}
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${VERSION} ./artifacts/distributions/
+
+workflows:
+  version: 2
+  check:
+    jobs:
+      - build:
+          filters:
+            branches:
+              ignore: gh-pages
+  deploy:
+    jobs:
+      - build:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /.+/
+      - publish-github-release:
+          requires:
+            - build
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /.+/

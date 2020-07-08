@@ -101,6 +101,12 @@ public class XInclude {
         init();
     }
 
+    public XInclude(DocumentResolver resolver, FragmentIdParser fragidParser) {
+        this.resolver = resolver;
+        fragmentIdParser = fragidParser;
+        init();
+    }
+
     private void init() {
         registerScheme(new XmlnsScheme());
         registerScheme(new ElementScheme());

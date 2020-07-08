@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 
 public class DefaultFragmentIdParser implements FragmentIdParser {
     private static final QName xs_NCName = new QName("http://www.w3.org/2001/XMLSchema", "NCName");
+    private static final Pattern githubLines = Pattern.compile("^L\\s*(\\d+)\\s*(-\\s*L\\s*(\\d+))?\\s*$");
     private static final Processor processor = new Processor(false);
     private static final ItemTypeFactory typeFactory = new ItemTypeFactory(processor);
     private XInclude xinclude = null;
@@ -87,44 +88,47 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
         return array;
     }
 
+    private Scheme getTextSchemeInstance(String name, String fragid) {
+        Scheme scheme = xinclude.getScheme(name);
+        if (scheme != null) {
+            if (scheme instanceof TextScheme) {
+                return ((TextScheme) scheme).newInstance(fragid);
+            }
+            // Programmer error, someone's extended the set of scheme types in an incomplete way
+            throw new RuntimeException("Unexpected scheme type in parseTextFragid");
+        } else {
+            throw new UnknownXPointerSchemeException("Unknown scheme: " + name);
+        }
+    }
+
     private Scheme[] parseTextFragid(String fragid) {
         // char=
         // line=
         // search=
-        if (fragid.matches("^\\s*char\\s*=.*")) {
-            Scheme scheme = xinclude.getScheme("text");
-            if (scheme != null) {
-                if (scheme instanceof TextScheme) {
-                    return new Scheme[] { ((TextScheme) scheme).newInstance(fragid) };
+        // L#[-L#]
+        if (fragid.matches("^\\s*char\\s*=.*")
+            || fragid.matches("^\\s*line\\s*=.*")) {
+            return new Scheme[] { getTextSchemeInstance("text", fragid) };
+        } else if (fragid.matches("^L\\s*\\d+\\s*(-\\s*L\\s*\\d+)?\\s*$")) {
+            // Fake it.
+            Matcher lmatcher = githubLines.matcher(fragid);
+            if (lmatcher.find()) {
+                String fakefragid = "line=";
+                int linenum = Integer.parseInt(lmatcher.group(1));
+                fakefragid += (linenum - 1);
+                if (lmatcher.group(3) != null) {
+                    linenum = Integer.parseInt(lmatcher.group(3));
+                    fakefragid += "," + linenum;
+                } else {
+                    fakefragid += "," + linenum;
                 }
-                // Programmer error, someone's extended the set of scheme types in an incomplete way
-                throw new RuntimeException("Unexpected scheme type in parseTextFragid");
+                return new Scheme[] { getTextSchemeInstance("text", fakefragid) };
             } else {
-                throw new UnknownXPointerSchemeException("Unknown scheme: text");
-            }
-        } else if (fragid.matches("^\\s*line\\s*=.*")) {
-            Scheme scheme = xinclude.getScheme("text");
-            if (scheme != null) {
-                if (scheme instanceof TextScheme) {
-                    return new Scheme[] { ((TextScheme) scheme).newInstance(fragid) };
-                }
-                // Programmer error, someone's extended the set of scheme types in an incomplete way
-                throw new RuntimeException("Unexpected scheme type in parseTextFragid");
-            } else {
-                throw new UnknownXPointerSchemeException("Unknown scheme: text");
+                throw new RuntimeException("Internal error in L# fragid parser");
             }
         } else if (fragid.matches("^\\s*search\\s*=.*")) {
-            Scheme scheme = xinclude.getScheme("search");
-            if (scheme != null) {
-                int pos = fragid.indexOf("=");
-                if (scheme instanceof TextScheme) {
-                    return new Scheme[] { ((TextScheme) scheme).newInstance(fragid.substring(pos+1)) };
-                }
-                // Programmer error, someone's extended the set of scheme types in an incomplete way
-                throw new RuntimeException("Unexpected scheme type in parseTextFragid");
-            } else {
-                throw new UnknownXPointerSchemeException("Unknown scheme: text");
-            }
+            int pos = fragid.indexOf("=");
+            return new Scheme[] { getTextSchemeInstance("search", fragid.substring(pos+1)) };
         }
 
         // scheme(...) ...

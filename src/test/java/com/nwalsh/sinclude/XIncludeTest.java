@@ -235,6 +235,18 @@ public class XIncludeTest extends TestCase {
         } catch (Throwable cause) {
             fail();
         }
-
     }
+
+    public void testTextLeadingBlanks() {
+        compareDocs("leadingblanks.xml");
+    }
+
+    public void testTextGhLine() {
+        compareDocs("ghline.xml");
+    }
+
+    public void testTextGhLineRange() {
+        compareDocs("ghlinerange.xml");
+    }
+
 }

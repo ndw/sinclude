@@ -131,13 +131,22 @@ public class FakeDocumentResolver implements DocumentResolver {
         xmlMap.put("textintegrityfail.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  <xi:include href='one.txt' parse='text' xpointer='line=0,;length=10000'/>"
                 + "</doc>");
-
+        xmlMap.put("leadingblanks.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='two.txt' parse='text'/>"
+                + "</doc>");
+        xmlMap.put("ghline.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='two.txt' parse='text' xpointer='L10'/>"
+                + "</doc>");
+        xmlMap.put("ghlinerange.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  <xi:include href='two.txt' parse='text' xpointer='L10-L15'/>"
+                + "</doc>");
     }
 
     private static Map<String, String> textMap = null;
     static {
         textMap = new HashMap<>();
         textMap.put("one.txt", "This is line one.\n");
+        textMap.put("two.txt", "\n\n\n\n\n\n\n\n\nThis is line 10.\n\n\n\n\nThis is line 15.");
         textMap.put("three.xml", "<doc>Document three.</doc>");
     }
 
@@ -216,6 +225,15 @@ public class FakeDocumentResolver implements DocumentResolver {
                 + "</doc>");
         expandedMap.put("textintegrity.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  This is line one.\n"
+                + "</doc>");
+        expandedMap.put("leadingblanks.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  \n\n\n\n\n\n\n\n\nThis is line 10.\n\n\n\n\nThis is line 15."
+                + "</doc>");
+        expandedMap.put("ghline.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  This is line 10.\n"
+                + "</doc>");
+        expandedMap.put("ghlinerange.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
+                + "  This is line 10.\n\n\n\n\nThis is line 15.\n"
                 + "</doc>");
     }
 

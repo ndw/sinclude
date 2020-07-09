@@ -1,14 +1,8 @@
 plugins {
   id "java"
+  id "maven-publish"
+  id "signing"
   id 'com.github.gmazzo.buildconfig' version "2.0.2"
-}
-
-sourceSets {
-  main {
-    resources {
-      exclude '**'
-    }
-  }	
 }
 
 repositories {
@@ -22,17 +16,12 @@ configurations.all {
   }
 }
 
-configurations {
-}
-
 dependencies {
   implementation (
     [group: 'net.sf.saxon', name: 'Saxon-HE', version: saxonVersion],
     [group: 'junit', name: 'junit', version: '4.13']
   )
 }
-
-//defaultTasks 'reportResults', 'coverageReport'
 
 buildConfig {
   packageName("com.nwalsh")
@@ -49,6 +38,16 @@ jar {
     attributes "Implementation-Title": "Saxon XInclude Processor"
     attributes "Implementation-Version": sincludeVersion
   }
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier = 'javadoc'
+  from javadoc.destinationDir
+}
+
+task sourcesJar(type: Jar) {
+  classifier = 'sources'
+  from sourceSets.main.allSource
 }
 
 task distCopyJar(type: Copy, dependsOn: ['jar']) {
@@ -80,6 +79,61 @@ task zipDist(type: Zip,
 task dist(dependsOn: ['test', 'zipDist']) {
   doLast {
     println("Built dist for ${basename} version ${sincludeVersion}")
+  }
+}
+
+signing {
+  sign publishing.publications
+}
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      pom {
+        name = 'Saxon XInclude'
+        packaging = 'jar'
+        description = 'An XInclude processor for Saxon'
+        url = 'https://github.com/ndw/sinclude'
+
+        scm {
+          url = 'scm:git@github.com:ndw/sinclude.git'
+          connection = 'scm:git@github.com:ndw/sinclude.git'
+          developerConnection = 'scm:git@github.com:ndw/sinclude.git'
+        }
+
+        licenses {
+          license {
+            name = 'Apache License version 2.0'
+            url = 'https://www.apache.org/licenses/LICENSE-2.0'
+            distribution = 'repo'
+          }
+        }
+
+        developers {
+          developer {
+            id = 'ndw'
+            name = 'Norman Walsh'
+          }
+        }
+      }
+
+      groupId = "com.nwalsh"
+      artifactId = "sinclude"
+      version = sincludeVersion
+      from components.java
+      artifact javadocJar
+      artifact sourcesJar
+    }
+  }
+
+  repositories {
+    maven {
+      url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+      credentials {
+        username = sonatypeUsername
+        password = sonatypePassword
+      }
+    }
   }
 }
 

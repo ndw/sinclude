@@ -1,5 +1,6 @@
 package com.nwalsh.xslt;
 
+import com.nwalsh.DebuggingLogger;
 import com.nwalsh.sinclude.XInclude;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
@@ -59,7 +60,10 @@ public class XIncludeFunction extends ExtensionFunctionDefinition {
     }
 
     private class PropertiesCall extends ExtensionFunctionCall {
-        public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
+        DebuggingLogger logger = null;
+
+        public Sequence call(XPathContext xpathContext, Sequence[] sequences) throws XPathException {
+            logger = new DebuggingLogger(xpathContext.getConfiguration().getLogger());
             NodeInfo source = (NodeInfo) sequences[0].head();
 
             if (sequences.length > 1) {

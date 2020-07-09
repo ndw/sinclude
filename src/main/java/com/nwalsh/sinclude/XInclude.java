@@ -1,5 +1,6 @@
 package com.nwalsh.sinclude;
 
+import com.nwalsh.DebuggingLogger;
 import com.nwalsh.sinclude.exceptions.XIncludeException;
 import com.nwalsh.sinclude.exceptions.XIncludeFallbackException;
 import com.nwalsh.sinclude.exceptions.XIncludeLoopException;
@@ -79,6 +80,7 @@ public class XInclude {
     private static final FingerprintedQName fq_xml_base =
             new FingerprintedQName(xml_base.getPrefix(), xml_base.getNamespaceURI(), xml_base.getLocalName());
 
+    private DebuggingLogger logger = null;
     private boolean trimText = false;
     private boolean fixupXmlBase = true;
     private boolean fixupXmlLang = true;
@@ -117,6 +119,7 @@ public class XInclude {
 
     public XInclude newInstance() {
         XInclude include = new XInclude();
+        include.logger = logger;
         include.resolver = resolver;
         include.fragmentIdParser = fragmentIdParser;
         // not the data
@@ -175,6 +178,7 @@ public class XInclude {
     }
 
     public XdmNode expandXIncludes(XdmNode node) throws XPathException {
+        logger = new DebuggingLogger(node.getUnderlyingNode().getConfiguration().getLogger());
         TreeWalker walker = new TreeWalker();
         walker.register(xi_include, new XiIncludeHandler(this));
         walker.register(xi_fallback, new XiFallbackHandler());
@@ -253,12 +257,15 @@ public class XInclude {
             }
 
             if (xptr != null && fragid != null && !xptr.equals(fragid)) {
-                Logger logger = node.getProcessor().getUnderlyingConfiguration().getLogger();
                 if (parse == ParseType.XMLPARSE) {
-                    logger.info("XInclude specifies different xpointer/fragid, using xpointer for xml: " + xptr);
+                    if (logger != null) {
+                        logger.debug("XInclude specifies different xpointer/fragid, using xpointer for xml: " + xptr);
+                    }
                 } else {
                     xptr = fragid;
-                    logger.info("XInclude specifies different xpointer/fragid, using fragid for text: " + xptr);
+                    if (logger != null) {
+                        logger.debug("XInclude specifies different xpointer/fragid, using fragid for text: " + xptr);
+                    }
                 }
             }
 
@@ -294,8 +301,14 @@ public class XInclude {
             XdmNode doc = null;
             try {
                 if ("".equals(href)) {
+                    if (logger != null) {
+                        logger.debug("XInclude same document");
+                    }
                     doc = node;
                 } else {
+                    if (logger != null) {
+                        logger.debug("XInclude parse: " + href);
+                    }
                     URI next = node.getBaseURI().resolve(href);
                     if (uriStack.contains(next)) {
                         throw new XIncludeLoopException("XInclude loops: " + next.toASCIIString());

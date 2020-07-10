@@ -259,12 +259,12 @@ public class XInclude {
             if (xptr != null && fragid != null && !xptr.equals(fragid)) {
                 if (parse == ParseType.XMLPARSE) {
                     if (logger != null) {
-                        logger.debug("XInclude specifies different xpointer/fragid, using xpointer for xml: " + xptr);
+                        logger.debug(DebuggingLogger.XINCLUDE, "XInclude specifies different xpointer/fragid, using xpointer for xml: " + xptr);
                     }
                 } else {
                     xptr = fragid;
                     if (logger != null) {
-                        logger.debug("XInclude specifies different xpointer/fragid, using fragid for text: " + xptr);
+                        logger.debug(DebuggingLogger.XINCLUDE, "XInclude specifies different xpointer/fragid, using fragid for text: " + xptr);
                     }
                 }
             }
@@ -302,12 +302,12 @@ public class XInclude {
             try {
                 if ("".equals(href)) {
                     if (logger != null) {
-                        logger.debug("XInclude same document");
+                        logger.debug(DebuggingLogger.XINCLUDE, "XInclude same document");
                     }
                     doc = node;
                 } else {
                     if (logger != null) {
-                        logger.debug("XInclude parse: " + href);
+                        logger.debug(DebuggingLogger.XINCLUDE, "XInclude parse: " + href);
                     }
                     URI next = node.getBaseURI().resolve(href);
                     if (uriStack.contains(next)) {

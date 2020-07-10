@@ -11,7 +11,8 @@ public class Register implements Initializer {
         // Unfortunately, Saxon doesn't have a .debug() method on its standard logger
         DebuggingLogger logger = new DebuggingLogger(config.getLogger());
 
-        logger.debug("Registering " + BuildConfig.TITLE + " extension functions (version " + BuildConfig.VERSION + ")");
+        logger.debug(DebuggingLogger.REGISTRATION,
+                "Registering " + BuildConfig.TITLE + " extension functions (version " + BuildConfig.VERSION + ")");
 
         config.registerExtensionFunction(new XIncludeFunction());
     }

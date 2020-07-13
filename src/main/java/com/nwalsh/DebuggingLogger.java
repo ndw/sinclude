@@ -37,7 +37,7 @@ public class DebuggingLogger extends StandardLogger {
         } else if (!("0".equals(val) || "no".equals(val) || "false".equals(val))) {
             noisy = false;
         } else {
-            String[] tokens = System.getProperty(propertyName).split("[,\\s]+");
+            String[] tokens = val.split("[,\\s]+");
             for (String token : tokens) {
                 String flag = token.trim().toLowerCase();
                 if (!"".equals(flag)) {

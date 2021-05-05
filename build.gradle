@@ -18,7 +18,9 @@ configurations.all {
 
 dependencies {
   implementation (
-    [group: 'net.sf.saxon', name: 'Saxon-HE', version: saxonVersion],
+    [group: 'net.sf.saxon', name: 'Saxon-HE', version: saxonVersion]
+  )
+  testImplementation (
     [group: 'junit', name: 'junit', version: '4.13']
   )
 }

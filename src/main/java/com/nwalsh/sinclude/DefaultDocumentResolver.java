@@ -12,10 +12,12 @@ import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.serialize.SerializationProperties;
 import net.sf.saxon.trans.XPathException;
+import org.xml.sax.InputSource;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.URIResolver;
+import javax.xml.transform.sax.SAXSource;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -30,7 +32,12 @@ public class DefaultDocumentResolver implements DocumentResolver {
         builder.setLineNumbering(true);
         try {
             Source source = resolver.resolve(uri, base.getBaseURI().toASCIIString());
-            return builder.build(source);
+            if (source == null) {
+                String systemId = base.getBaseURI().resolve(uri).toASCIIString();
+                return builder.build(new SAXSource(new InputSource(systemId)));
+            } else {
+                return builder.build(source);
+            }
         } catch (TransformerException | SaxonApiException e) {
             throw new XIncludeIOException(e);
         }

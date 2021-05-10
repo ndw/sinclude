@@ -25,14 +25,6 @@ dependencies {
   )
 }
 
-if (!hasProperty("sonatypeUsername")) {
-  ext.sonatypeUsername=""
-}
-
-if (!hasProperty("sonatypePassword")) {
-  ext.sonatypePassword=""
-}
-
 buildConfig {
   packageName("com.nwalsh")
   buildConfigField('String', 'TITLE', "\"${sincludeTitle}\"")
@@ -140,8 +132,8 @@ publishing {
     maven {
       url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
       credentials {
-        username = sonatypeUsername
-        password = sonatypePassword
+        username = findProperty("sonatypeUsername") ?: ""
+        password = findProperty("sonatypePassword") ?: ""
       }
     }
   }

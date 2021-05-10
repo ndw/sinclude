@@ -160,6 +160,82 @@ public class XIncludeTest extends TestCase {
         assertTrue(pass);
     }
 
+    public void testXmlIncludeFifteen() {
+        String key = "fifteen.xml";
+        XInclude include = new XInclude(resolver);
+        include.setFixupXmlLang(true);
+        XdmNode doc = resolver.resolveXml(emptyDoc, key, null, null);
+        XdmNode resolved = null;
+        try {
+            resolved = include.expandXIncludes(doc);
+        } catch (XPathException e) {
+            throw new RuntimeException(e);
+        }
+
+        XdmNode expected = resolver.expected(emptyDoc, key);
+
+        boolean pass = resolver.theSame(expected, resolved);
+        if (!pass) {
+            System.err.println("Expected:");
+            System.err.println(expected);
+            System.err.println("Actual:");
+            System.err.println(resolved);
+        }
+
+        assertTrue(pass);
+    }
+
+    public void testXmlIncludeSixteen() {
+        String key = "sixteen.xml";
+        XInclude include = new XInclude(resolver);
+        include.setFixupXmlLang(true);
+        XdmNode doc = resolver.resolveXml(emptyDoc, key, null, null);
+        XdmNode resolved = null;
+        try {
+            resolved = include.expandXIncludes(doc);
+        } catch (XPathException e) {
+            throw new RuntimeException(e);
+        }
+
+        XdmNode expected = resolver.expected(emptyDoc, key);
+
+        boolean pass = resolver.theSame(expected, resolved);
+        if (!pass) {
+            System.err.println("Expected:");
+            System.err.println(expected);
+            System.err.println("Actual:");
+            System.err.println(resolved);
+        }
+
+        assertTrue(pass);
+    }
+
+    public void testXmlIncludeSeventeen() {
+        String key = "seventeen.xml";
+        XInclude include = new XInclude(resolver);
+        include.setFixupXmlLang(true);
+        include.setCopyAttributes(false);
+        XdmNode doc = resolver.resolveXml(emptyDoc, key, null, null);
+        XdmNode resolved = null;
+        try {
+            resolved = include.expandXIncludes(doc);
+        } catch (XPathException e) {
+            throw new RuntimeException(e);
+        }
+
+        XdmNode expected = resolver.expected(emptyDoc, key);
+
+        boolean pass = resolver.theSame(expected, resolved);
+        if (!pass) {
+            System.err.println("Expected:");
+            System.err.println(expected);
+            System.err.println("Actual:");
+            System.err.println(resolved);
+        }
+
+        assertTrue(pass);
+    }
+
     public void testXmlIncludeNest1() {
         compareDocs("nest1.xml");
     }

@@ -79,6 +79,23 @@ public class FakeDocumentResolver implements DocumentResolver {
         xmlMap.put("fourteen.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  <xi:include href='onefr.xml' fragid='/1/3'/>"
                 + "</doc>");
+        xmlMap.put("fifteen.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'"
+                + "  xmlns:ex='http://example.com/'"
+                + "  xmlns:local='http://www.w3.org/2001/XInclude/local-attributes'>"
+                + "  <xi:include href='one.xml' ex:foo='ex:foo' local:bar='bar'/>"
+                + "</doc>");
+        xmlMap.put("sixteen.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'"
+                + "  xmlns:ex='http://example.com/'"
+                + "  xmlns:local='http://www.w3.org/2001/XInclude/local-attributes'>"
+                + "  <xi:include href='one.xml' fragid='/1/1' ex:foo='ex:foo' local:bar='bar'/>"
+                + "</doc>");
+        // Seventeen is exactly the same as sixteen, but the harness runs it with
+        // copyAttributes turned off
+        xmlMap.put("seventeen.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'"
+                + "  xmlns:ex='http://example.com/'"
+                + "  xmlns:local='http://www.w3.org/2001/XInclude/local-attributes'>"
+                + "  <xi:include href='one.xml' fragid='/1/1' ex:foo='ex:foo' local:bar='bar'/>"
+                + "</doc>");
         xmlMap.put("nest1.xml", "<nest1 xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  <xi:include href='nest2.xml'/>"
                 + "</nest1>");
@@ -190,6 +207,27 @@ public class FakeDocumentResolver implements DocumentResolver {
                 + "</doc>");
         expandedMap.put("fourteen.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  <p xml:base='http://example.com/docs/onefr.xml'>Paragraphe trois.</p>"
+                + "</doc>");
+        expandedMap.put("fifteen.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'"
+                + "  xmlns:ex='http://example.com/'"
+                + "  xmlns:local='http://www.w3.org/2001/XInclude/local-attributes'>"
+                + "  <doc ex:foo='ex:foo' bar='bar' xml:base='http://example.com/docs/one.xml'>"
+                + "  <p xml:id='one'>Paragraph one.</p>"
+                + "  <p xmlns='http://example.com/'>Paragraph two.</p>"
+                + "  <p xml:lang='fr'>Paragraphe trois.</p>"
+                + "</doc>"
+                + "</doc>");
+        expandedMap.put("sixteen.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'"
+                + "  xmlns:ex='http://example.com/'"
+                + "  xmlns:local='http://www.w3.org/2001/XInclude/local-attributes'>"
+                + "  <p xml:id='one' ex:foo='ex:foo' bar='bar' xml:base='http://example.com/docs/one.xml'>Paragraph one.</p>"
+                + "</doc>");
+        // Seventeen is exactly the same as sixteen, but the harness runs it with
+        // copyAttributes turned off
+        expandedMap.put("seventeen.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'"
+                + "  xmlns:ex='http://example.com/'"
+                + "  xmlns:local='http://www.w3.org/2001/XInclude/local-attributes'>"
+                + "  <p xml:id='one' xml:base='http://example.com/docs/one.xml'>Paragraph one.</p>"
                 + "</doc>");
         expandedMap.put("nest1.xml", "<nest1 xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  <nest2 xml:base='http://example.com/docs/nest2.xml'>"

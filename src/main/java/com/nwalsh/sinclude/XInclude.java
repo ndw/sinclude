@@ -177,6 +177,14 @@ public class XInclude {
         fixupXmlLang = fixup;
     }
 
+    public boolean getCopyAttributes() {
+        return copyAttributes;
+    }
+
+    public void setCopyAttributes(boolean copy) {
+        copyAttributes = copy;
+    }
+
     public XdmNode expandXIncludes(XdmNode node) throws XPathException {
         logger = new DebuggingLogger(node.getUnderlyingNode().getConfiguration().getLogger());
         TreeWalker walker = new TreeWalker();
@@ -361,7 +369,7 @@ public class XInclude {
             }
 
             XInclude nested = xinclude.newInstance();
-            doc = fixup(doc, setId);
+            doc = fixup(node, doc, setId);
             doc = nested.expandXIncludes(doc);
             if (!"".equals(href)) {
                 uriStack.pop();
@@ -369,7 +377,7 @@ public class XInclude {
             return doc;
         }
 
-        private XdmNode fixup(XdmNode document, String setId) {
+        private XdmNode fixup(XdmNode xinclude, XdmNode document, String setId) {
             // Fixing up xml:base is usually handled by the fragid processor.
             // It's only ever true here if we're XIncluding a whole document.
             // Consequently, fixupLang never applies here.
@@ -408,7 +416,7 @@ public class XInclude {
                                 }
                             }
 
-                            for (AttributeInfo ainfo : node.getUnderlyingNode().attributes()) {
+                            for (AttributeInfo ainfo : xinclude.getUnderlyingNode().attributes()) {
                                 // Attribute must be in a namespace
                                 String nsuri = ainfo.getNodeName().getURI();
                                 boolean copy = (nsuri != null && !"".equals(nsuri));

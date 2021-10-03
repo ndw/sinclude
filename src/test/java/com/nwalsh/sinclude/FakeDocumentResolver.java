@@ -299,7 +299,7 @@ public class FakeDocumentResolver implements DocumentResolver {
     }
 
     @Override
-    public XdmNode resolveText(XdmNode base, String uri, String accept, String acceptLanguage) {
+    public XdmNode resolveText(XdmNode base, String uri, String encoding, String accept, String acceptLanguage) {
         Logger logger = base.getProcessor().getUnderlyingConfiguration().getLogger();
         logger.info("Resolving text XInclude: " + uri + " (" + base.getBaseURI().resolve(uri).toASCIIString() + ")");
         if (textMap.containsKey(uri)) {

@@ -45,11 +45,11 @@ public class DefaultDocumentResolver implements DocumentResolver {
     }
 
     @Override
-    public XdmNode resolveText(XdmNode base, String uri, String accept, String acceptLanguage) {
+    public XdmNode resolveText(XdmNode base, String uri, String encoding, String accept, String acceptLanguage) {
         Processor processor = base.getProcessor();
         UnparsedTextURIResolver resolver = processor.getUnderlyingConfiguration().getUnparsedTextURIResolver();
         try {
-            Reader reader = resolver.resolve(base.getBaseURI().resolve(uri), "utf-8", processor.getUnderlyingConfiguration());
+            Reader reader = resolver.resolve(base.getBaseURI().resolve(uri), encoding, processor.getUnderlyingConfiguration());
             BufferedReader breader = new BufferedReader(reader);
             StringBuilder text = new StringBuilder();
             String line = breader.readLine();

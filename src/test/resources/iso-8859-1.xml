@@ -1,0 +1,6 @@
+<document>
+  <xi:include href="iso-8859-1.txt"
+              parse="text"
+              encoding="iso-8859-1"
+              xmlns:xi="http://www.w3.org/2001/XInclude"/>
+</document>

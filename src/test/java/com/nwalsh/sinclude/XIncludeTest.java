@@ -13,6 +13,7 @@ import org.xml.sax.InputSource;
 
 import javax.xml.transform.sax.SAXSource;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 
 public class XIncludeTest extends TestCase {
@@ -323,6 +324,19 @@ public class XIncludeTest extends TestCase {
 
     public void testTextGhLineRange() {
         compareDocs("ghlinerange.xml");
+    }
+
+    public void testEncoding() {
+        XInclude include = new XInclude();
+
+        try {
+            DocumentBuilder builder = processor.newDocumentBuilder();
+            XdmNode doc = builder.build(new File("src/test/resources/iso-8859-1.xml"));
+            XdmNode resolved = include.expandXIncludes(doc);
+            assertNotNull(resolved);
+        } catch (Exception e) {
+            fail();
+        }
     }
 
 }

@@ -213,6 +213,7 @@ public class XInclude {
             String xptr = node.getAttributeValue(_xpointer);
             String fragid = node.getAttributeValue(_fragid);
             String setId = node.getAttributeValue(_set_xml_id);
+            String encoding = node.getAttributeValue(_encoding);
             String accept = node.getAttributeValue(_accept);
             String accept_lang = node.getAttributeValue(_accept_language);
             String parseAttr = node.getAttributeValue(_parse);
@@ -220,6 +221,10 @@ public class XInclude {
 
             if (href == null) {
                 href = "";
+            }
+
+            if (encoding == null) {
+                encoding = "UTF-8";
             }
 
             if (accept != null && accept.matches(".*[^\u0020-\u007e].*")) {
@@ -324,7 +329,7 @@ public class XInclude {
                     uriStack.push(next);
 
                     if (parse == ParseType.TEXTPARSE) {
-                        doc = resolver.resolveText(node, href, accept, accept_lang);
+                        doc = resolver.resolveText(node, href, encoding, accept, accept_lang);
                     } else {
                         doc = resolver.resolveXml(node, href, accept, accept_lang);
                     }

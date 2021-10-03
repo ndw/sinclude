@@ -1,5 +1,6 @@
 package com.nwalsh.sinclude.schemes;
 
+import com.nwalsh.sinclude.exceptions.TextContentException;
 import com.nwalsh.sinclude.exceptions.XIncludeIOException;
 import com.nwalsh.sinclude.xpointer.DefaultSelectionResult;
 import com.nwalsh.sinclude.xpointer.SelectionResult;
@@ -24,11 +25,11 @@ public abstract class AbstractTextScheme {
             if (node.getNodeKind() == XdmNodeKind.TEXT) {
                 text = node.getStringValue();
             } else {
-                throw new XIncludeIOException("Document must contain a text node");
+                throw new TextContentException("Document must contain a text node");
             }
             count++;
             if (count > 1) {
-                throw new XIncludeIOException("Document must contain a single text node");
+                throw new TextContentException("Document must contain a single text node");
             }
         }
         return text;
@@ -46,7 +47,7 @@ public abstract class AbstractTextScheme {
             receiver.close();
             return new DefaultSelectionResult(true, destination.getXdmNode());
         } catch (XPathException e) {
-            throw new XIncludeIOException(e);
+            throw new TextContentException(e);
         }
     }
 }

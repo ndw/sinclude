@@ -1,5 +1,6 @@
 package com.nwalsh.sinclude;
 
+import com.nwalsh.sinclude.exceptions.TextContentException;
 import com.nwalsh.sinclude.exceptions.XIncludeIOException;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
@@ -39,7 +40,7 @@ public class DefaultDocumentResolver implements DocumentResolver {
                 return builder.build(source);
             }
         } catch (TransformerException | SaxonApiException e) {
-            throw new XIncludeIOException(e);
+            throw new XIncludeIOException(uri, e);
         }
     }
 
@@ -70,10 +71,10 @@ public class DefaultDocumentResolver implements DocumentResolver {
                 receiver.close();
                 return destination.getXdmNode();
             } catch (XPathException e) {
-                throw new XIncludeIOException(e);
+                throw new TextContentException(e);
             }
         } catch (TransformerException | IOException e) {
-            throw new XIncludeIOException(e);
+            throw new XIncludeIOException(uri, e);
         }
     }
 }

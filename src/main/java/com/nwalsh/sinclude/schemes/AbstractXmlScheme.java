@@ -1,6 +1,7 @@
 package com.nwalsh.sinclude.schemes;
 
 import com.nwalsh.sinclude.XInclude;
+import com.nwalsh.sinclude.exceptions.FixupException;
 import com.nwalsh.sinclude.exceptions.XIncludeIOException;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
@@ -99,7 +100,7 @@ public abstract class AbstractXmlScheme {
             XdmSequenceIterator<XdmNode> iter = document.axisIterator(Axis.CHILD);
             return iter.next();
         } catch (XPathException e) {
-            throw new XIncludeIOException(e);
+            throw new FixupException(e);
         }
     }
 }

@@ -158,24 +158,38 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
             Matcher matcher = schemeRE.matcher(fragid);
             if (matcher.find()) {
                 String name = matcher.group(1);
-                fragid = matcher.group(2);
+                String saveid = matcher.group(2);
+                fragid = saveid;
                 StringBuilder data = new StringBuilder();
                 boolean done = false;
+                int openCount = 0;
                 while (!done) {
                     if ("".equals(fragid)) {
                         throw new MalformedXPointerSchemeException("End of string in data");
-                    } else if (fragid.startsWith(")")) {
-                        fragid = fragid.substring(1).trim();
-                        done = true;
-                    } else if (fragid.startsWith("^(") || fragid.startsWith("^)") || fragid.startsWith("^^")) {
-                        data.append(fragid.substring(1,2));
-                        fragid = fragid.substring(2);
                     } else if (fragid.startsWith("(")) {
-                        throw new MalformedXPointerSchemeException("Unescaped open paren encountered");
+                        openCount++;
+                        data.append(fragid.charAt(0));
+                        fragid = fragid.substring(1);
+                    } else if (fragid.startsWith(")")) {
+                        if (openCount > 0) {
+                            openCount--;
+                            data.append(fragid.charAt(0));
+                            fragid = fragid.substring(1);
+                        } else {
+                            fragid = fragid.substring(1).trim();
+                            done = true;
+                        }
+                    } else if (fragid.startsWith("^(") || fragid.startsWith("^)") || fragid.startsWith("^^")) {
+                        data.append(fragid.charAt(1));
+                        fragid = fragid.substring(2);
                     } else {
-                        data.append(fragid.substring(0,1));
+                        data.append(fragid.charAt(0));
                         fragid = fragid.substring(1);
                     }
+                }
+
+                if (openCount != 0) {
+                    throw new MalformedXPointerSchemeException("Unbalanced, unescaped parens in " + saveid);
                 }
 
                 Scheme scheme = xinclude.getScheme(name);

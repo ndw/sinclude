@@ -332,6 +332,7 @@ public class XInclude {
                         doc = resolver.resolveText(node, href, encoding, accept, accept_lang);
                     } else {
                         doc = resolver.resolveXml(node, href, accept, accept_lang);
+                        doc = expandXIncludes(doc);
                     }
                 }
 

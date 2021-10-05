@@ -339,4 +339,16 @@ public class XIncludeTest extends TestCase {
         }
     }
 
+    public void testNestedIncludeTest() {
+        XInclude include = new XInclude();
+
+        try {
+            DocumentBuilder builder = processor.newDocumentBuilder();
+            XdmNode doc = builder.build(new File("src/test/resources/xproc-root.xml"));
+            XdmNode resolved = include.expandXIncludes(doc);
+            assertNotNull(resolved);
+        } catch (Exception e) {
+            fail();
+        }
+    }
 }

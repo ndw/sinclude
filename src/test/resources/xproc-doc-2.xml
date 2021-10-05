@@ -1,0 +1,4 @@
+<doc>
+    <p>A par not to be included.</p>
+    <p xml:id="xincluded-section">This para is included.</p>
+</doc>

@@ -60,4 +60,11 @@ public class FragIdParseTest extends TestCase {
         assertEquals("xml", schemes[0].parseType());
     }
 
+    public void testBalancedParens() {
+        Scheme[] schemes = fragidParser.parseFragmentIdentifier(ParseType.XMLPARSE, "xpath(//*[contains(., 'test')])");
+        assertEquals(1, schemes.length);
+        assertEquals("xpath", schemes[0].schemeName());
+        assertEquals("xml", schemes[0].parseType());
+    }
+
 }

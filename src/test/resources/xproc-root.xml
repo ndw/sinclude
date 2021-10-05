@@ -1,0 +1,7 @@
+<document xmlns:xi="http://www.w3.org/2001/XInclude">
+  <p>This test comes from the XProc 3.0 test suite, test ab-xinclude-015.</p>
+   <xi:include href="xproc-doc-1.xml"
+               xpointer="contained-section"/>
+   <xi:include href="xproc-doc-1.xml"
+               xpointer="xincluded-section"/>
+</document>

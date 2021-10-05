@@ -1,0 +1,6 @@
+<doc>
+    <p>This is a doc including another doc, referenced by an outer doc.</p>
+    <p xml:id="contained-section">This is contained.</p>
+    <xi:include xmlns:xi='http://www.w3.org/2001/XInclude'
+        href="xproc-doc-2.xml"/>
+</doc>

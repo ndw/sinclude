@@ -1,5 +1,6 @@
 package com.nwalsh.drivers;
 
+import com.nwalsh.sinclude.utils.ReceiverUtils;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.expr.parser.Loc;
@@ -39,13 +40,13 @@ public class Main {
         XdmNode doc = iter.next();
         iter = doc.axisIterator(Axis.CHILD);
 
+
         XdmNode newdoc = null;
-        XdmDestination destination = new XdmDestination();
-        PipelineConfiguration pipe = processor.getUnderlyingConfiguration().makePipelineConfiguration();
-        Receiver receiver = destination.getReceiver(pipe,  new SerializationProperties());
         try {
-            //receiver.setSystemId("http://receiver.com/");
-            receiver.open();
+            XdmDestination destination = ReceiverUtils.makeDestination(URI.create("http://example.com/receiver"));
+            PipelineConfiguration pipe = processor.getUnderlyingConfiguration().makePipelineConfiguration();
+            Receiver receiver = ReceiverUtils.makeReceiver(pipe, destination);
+
             receiver.startDocument(0);
 
             Location loc = new Loc("http://example.com/", -1, -1);

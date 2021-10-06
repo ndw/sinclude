@@ -2,7 +2,7 @@ package com.nwalsh.sinclude;
 
 import com.nwalsh.sinclude.exceptions.TextContentException;
 import com.nwalsh.sinclude.exceptions.XIncludeIOException;
-import net.sf.saxon.event.PipelineConfiguration;
+import com.nwalsh.sinclude.utils.ReceiverUtils;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.expr.parser.Loc;
 import net.sf.saxon.lib.UnparsedTextURIResolver;
@@ -11,7 +11,6 @@ import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.serialize.SerializationProperties;
 import net.sf.saxon.trans.XPathException;
 import org.xml.sax.InputSource;
 
@@ -22,6 +21,8 @@ import javax.xml.transform.sax.SAXSource;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class DefaultDocumentResolver implements DocumentResolver {
     @Override
@@ -60,11 +61,20 @@ public class DefaultDocumentResolver implements DocumentResolver {
             breader.close();
             reader.close();
 
-            XdmDestination destination = new XdmDestination();
-            PipelineConfiguration pipe = processor.getUnderlyingConfiguration().makePipelineConfiguration();
-            Receiver receiver = destination.getReceiver(pipe,  new SerializationProperties());
+            URI baseURI = ReceiverUtils.nodeBaseURI(base);
+            if (baseURI != null) {
+                baseURI = baseURI.resolve(uri);
+            } else {
+                try {
+                    baseURI = new URI(uri);
+                } catch (URISyntaxException e) {
+                    throw new XIncludeIOException(e.getMessage(), e);
+                }
+            }
+
+            XdmDestination destination = ReceiverUtils.makeDestination(baseURI);
             try {
-                receiver.open();
+                Receiver receiver = ReceiverUtils.makeReceiver(base, destination);
                 receiver.startDocument(0);
                 receiver.characters(text.toString(), Loc.NONE, 0);
                 receiver.endDocument();

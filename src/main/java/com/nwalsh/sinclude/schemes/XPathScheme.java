@@ -3,14 +3,12 @@ package com.nwalsh.sinclude.schemes;
 import com.nwalsh.sinclude.XInclude;
 import com.nwalsh.sinclude.data.XmlnsData;
 import com.nwalsh.sinclude.exceptions.MalformedXPointerSchemeException;
-import com.nwalsh.sinclude.exceptions.XIncludeIOException;
 import com.nwalsh.sinclude.exceptions.XPointerSchemeMatchException;
+import com.nwalsh.sinclude.utils.ReceiverUtils;
 import com.nwalsh.sinclude.xpointer.DefaultSelectionResult;
-import com.nwalsh.sinclude.xpointer.Scheme;
 import com.nwalsh.sinclude.xpointer.SchemeData;
 import com.nwalsh.sinclude.xpointer.SelectionResult;
 import com.nwalsh.sinclude.xpointer.XmlScheme;
-import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.expr.parser.Loc;
 import net.sf.saxon.s9api.Location;
@@ -22,7 +20,6 @@ import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.serialize.SerializationProperties;
 import net.sf.saxon.trans.XPathException;
 
 import java.net.URI;
@@ -67,10 +64,6 @@ public class XPathScheme extends AbstractXmlScheme implements XmlScheme {
             throw new MalformedXPointerSchemeException(sae.getMessage());
         }
 
-        XdmDestination destination = new XdmDestination();
-        PipelineConfiguration pipe = document.getUnderlyingNode().getConfiguration().makePipelineConfiguration();
-        Receiver receiver = destination.getReceiver(pipe,  new SerializationProperties());
-
         // There's an (apparent) bug in the Saxon API where setting the location when appending to the
         // receiver has no effect if you haven't also set the system ID on the receiver.
         // See https://saxonica.plan.io/issues/4618
@@ -78,16 +71,16 @@ public class XPathScheme extends AbstractXmlScheme implements XmlScheme {
         // I evaluate the expression and store there results so that I can work out what base URI
         // to use on the receiver. I have to do that before I open the receiver...
 
+        URI baseURI = null;
         try {
-            URI baseURI = null;
             Vector<XdmNode> results = new Vector<XdmNode>();
 
             selector.setContextItem(document);
             for (XdmItem item : selector.evaluate()) {
                 if (item.isNode()) {
                     XdmNode node = (XdmNode) item;
-                    URI nodeBaseURI = node.getBaseURI();
-                    if (baseURI == null && nodeBaseURI != null && !"".equals(nodeBaseURI.toASCIIString())) {
+                    URI nodeBaseURI = ReceiverUtils.nodeBaseURI(node);
+                    if (baseURI == null && nodeBaseURI != null) {
                         baseURI = nodeBaseURI;
                     }
 
@@ -101,11 +94,12 @@ public class XPathScheme extends AbstractXmlScheme implements XmlScheme {
                 }
             }
 
-            if (baseURI != null) {
-                receiver.setSystemId(baseURI.toASCIIString());
+            if (baseURI == null) {
+                baseURI = ReceiverUtils.nodeBaseURI(document);
             }
 
-            receiver.open();
+            XdmDestination destination = ReceiverUtils.makeDestination(baseURI);
+            Receiver receiver = ReceiverUtils.makeReceiver(document, destination);
             receiver.startDocument(0);
             for (XdmNode node : results) {
                 Location loc = new Loc(node.getBaseURI().toASCIIString(), -1, -1);

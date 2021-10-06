@@ -2,7 +2,6 @@ package com.nwalsh.sinclude.schemes;
 
 import com.nwalsh.sinclude.XInclude;
 import com.nwalsh.sinclude.exceptions.MalformedXPointerSchemeException;
-import com.nwalsh.sinclude.exceptions.XIncludeIOException;
 import com.nwalsh.sinclude.exceptions.XPointerSchemeMatchException;
 import com.nwalsh.sinclude.xpointer.SchemeData;
 import com.nwalsh.sinclude.xpointer.SelectionResult;

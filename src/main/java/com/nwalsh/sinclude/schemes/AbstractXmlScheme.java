@@ -2,8 +2,7 @@ package com.nwalsh.sinclude.schemes;
 
 import com.nwalsh.sinclude.XInclude;
 import com.nwalsh.sinclude.exceptions.FixupException;
-import com.nwalsh.sinclude.exceptions.XIncludeIOException;
-import net.sf.saxon.event.PipelineConfiguration;
+import com.nwalsh.sinclude.utils.ReceiverUtils;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.event.ReceiverOption;
 import net.sf.saxon.expr.parser.Loc;
@@ -17,7 +16,6 @@ import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.serialize.SerializationProperties;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.BuiltInAtomicType;
 
@@ -53,17 +51,14 @@ public abstract class AbstractXmlScheme {
             lang = getLang(node);
         }
 
-        XdmDestination destination = new XdmDestination();
-        PipelineConfiguration pipe = node.getUnderlyingNode().getConfiguration().makePipelineConfiguration();
-        Receiver receiver = destination.getReceiver(pipe, new SerializationProperties());
-
         if (node.getNodeKind() != XdmNodeKind.ELEMENT) {
             // This is an internal error and should never happen
             throw new IllegalArgumentException("XInclude scheme fixup can only be applied to elements");
         }
 
         try {
-            receiver.open();
+            XdmDestination destination = ReceiverUtils.makeDestination(node);
+            Receiver receiver = ReceiverUtils.makeReceiver(node, destination);
             receiver.startDocument(0);
 
             AttributeMap attributes = node.getUnderlyingNode().attributes();

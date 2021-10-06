@@ -1,5 +1,6 @@
 package com.nwalsh.sinclude;
 
+import com.nwalsh.sinclude.utils.ReceiverUtils;
 import com.nwalsh.sinclude.xpointer.DefaultSelectionResult;
 import com.nwalsh.sinclude.xpointer.FragmentIdParser;
 import com.nwalsh.sinclude.xpointer.ParseType;
@@ -25,6 +26,7 @@ import org.xml.sax.InputSource;
 
 import javax.xml.transform.sax.SAXSource;
 import java.io.ByteArrayInputStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
 public class SchemeTextTest extends TestCase {
@@ -62,12 +64,10 @@ public class SchemeTextTest extends TestCase {
                 + "\n"
                 + "This is line twenty.\n";
 
-        XdmDestination destination = new XdmDestination();
-        PipelineConfiguration pipe = processor.getUnderlyingConfiguration().makePipelineConfiguration();
-        Receiver receiver = destination.getReceiver(pipe, new SerializationProperties());
-
         try {
-            receiver.open();
+            XdmDestination destination = ReceiverUtils.makeDestination(URI.create("http://example.com/test.txt"));
+            PipelineConfiguration pipe = processor.getUnderlyingConfiguration().makePipelineConfiguration();
+            Receiver receiver = ReceiverUtils.makeReceiver(pipe, destination);
             receiver.startDocument(0);
             receiver.characters(doc, Loc.NONE, 0);
             receiver.endDocument();

@@ -1,5 +1,6 @@
 package com.nwalsh.sinclude;
 
+import com.nwalsh.sinclude.utils.ReceiverUtils;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.expr.parser.Loc;
@@ -300,15 +301,14 @@ public class FakeDocumentResolver implements DocumentResolver {
 
     @Override
     public XdmNode resolveText(XdmNode base, String uri, String encoding, String accept, String acceptLanguage) {
+        URI baseURI = base.getBaseURI().resolve(uri);
         Logger logger = base.getProcessor().getUnderlyingConfiguration().getLogger();
-        logger.info("Resolving text XInclude: " + uri + " (" + base.getBaseURI().resolve(uri).toASCIIString() + ")");
+        logger.info("Resolving text XInclude: " + uri + " (" + baseURI.toASCIIString() + ")");
         if (textMap.containsKey(uri)) {
             String text = textMap.get(uri);
-            XdmDestination destination = new XdmDestination();
-            PipelineConfiguration pipe = base.getUnderlyingNode().getConfiguration().makePipelineConfiguration();
-            Receiver receiver = destination.getReceiver(pipe, new SerializationProperties());
             try {
-                receiver.open();
+                XdmDestination destination = ReceiverUtils.makeDestination(baseURI);
+                Receiver receiver = ReceiverUtils.makeReceiver(base, destination);
                 receiver.startDocument(0);
                 receiver.characters(text, Loc.NONE, 0);
                 receiver.endDocument();

@@ -1,5 +1,6 @@
 package com.nwalsh.sinclude;
 
+import com.nwalsh.sinclude.utils.ReceiverUtils;
 import com.nwalsh.sinclude.xpointer.FragmentIdParser;
 import com.nwalsh.sinclude.xpointer.ParseType;
 import com.nwalsh.sinclude.xpointer.Scheme;
@@ -15,6 +16,8 @@ import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.serialize.SerializationProperties;
 import net.sf.saxon.trans.XPathException;
+
+import java.net.URI;
 
 public class SchemeSearchTest extends TestCase {
     private static final String NS_XML = "http://www.w3.org/XML/1998/namespace";
@@ -51,12 +54,10 @@ public class SchemeSearchTest extends TestCase {
                 + "\n"
                 + "This is line twenty.\n";
 
-        XdmDestination destination = new XdmDestination();
-        PipelineConfiguration pipe = processor.getUnderlyingConfiguration().makePipelineConfiguration();
-        Receiver receiver = destination.getReceiver(pipe, new SerializationProperties());
-
         try {
-            receiver.open();
+            XdmDestination destination = ReceiverUtils.makeDestination(URI.create("http://example.com/test.txt"));
+            PipelineConfiguration pipe = processor.getUnderlyingConfiguration().makePipelineConfiguration();
+            Receiver receiver = ReceiverUtils.makeReceiver(pipe, destination);
             receiver.startDocument(0);
             receiver.characters(doc, Loc.NONE, 0);
             receiver.endDocument();

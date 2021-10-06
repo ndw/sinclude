@@ -5,7 +5,6 @@ import com.nwalsh.sinclude.exceptions.MalformedXPointerSchemeException;
 import com.nwalsh.sinclude.exceptions.UnknownXPointerSchemeException;
 import com.nwalsh.sinclude.exceptions.UnparseableXPointerSchemeException;
 import com.nwalsh.sinclude.exceptions.XIncludeSyntaxException;
-import com.nwalsh.sinclude.schemes.ElementScheme;
 import net.sf.saxon.s9api.ItemType;
 import net.sf.saxon.s9api.ItemTypeFactory;
 import net.sf.saxon.s9api.Processor;

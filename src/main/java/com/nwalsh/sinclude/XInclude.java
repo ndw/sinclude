@@ -7,21 +7,20 @@ import com.nwalsh.sinclude.exceptions.XIncludeLoopException;
 import com.nwalsh.sinclude.exceptions.XIncludeNoFragmentException;
 import com.nwalsh.sinclude.exceptions.XIncludeSyntaxException;
 import com.nwalsh.sinclude.schemes.ElementScheme;
-import com.nwalsh.sinclude.schemes.SearchScheme;
 import com.nwalsh.sinclude.schemes.RFC5147Scheme;
+import com.nwalsh.sinclude.schemes.SearchScheme;
 import com.nwalsh.sinclude.schemes.XPathScheme;
 import com.nwalsh.sinclude.schemes.XmlnsScheme;
+import com.nwalsh.sinclude.utils.ReceiverUtils;
 import com.nwalsh.sinclude.xpointer.DefaultFragmentIdParser;
 import com.nwalsh.sinclude.xpointer.FragmentIdParser;
 import com.nwalsh.sinclude.xpointer.ParseType;
 import com.nwalsh.sinclude.xpointer.Scheme;
 import com.nwalsh.sinclude.xpointer.SchemeData;
 import com.nwalsh.sinclude.xpointer.SelectionResult;
-import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.event.ReceiverOption;
 import net.sf.saxon.expr.parser.Loc;
-import net.sf.saxon.lib.Logger;
 import net.sf.saxon.om.AttributeInfo;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.EmptyAttributeMap;
@@ -34,7 +33,6 @@ import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.serialize.SerializationProperties;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.BuiltInAtomicType;
 
@@ -190,6 +188,7 @@ public class XInclude {
         TreeWalker walker = new TreeWalker();
         walker.register(xi_include, new XiIncludeHandler(this));
         walker.register(xi_fallback, new XiFallbackHandler());
+        URI z = node.getBaseURI();
         return walker.walk(node);
     }
 
@@ -221,6 +220,8 @@ public class XInclude {
 
             if (href == null) {
                 href = "";
+            } else {
+                href = href.trim();
             }
 
             if (encoding == null) {
@@ -317,7 +318,11 @@ public class XInclude {
                     if (logger != null) {
                         logger.debug(DebuggingLogger.XINCLUDE, "XInclude same document");
                     }
-                    doc = node;
+                    XdmNode parent = node;
+                    while (parent.getParent() != null) {
+                        parent = parent.getParent();
+                    }
+                    doc = parent;
                 } else {
                     if (logger != null) {
                         logger.debug(DebuggingLogger.XINCLUDE, "XInclude parse: " + href);
@@ -332,8 +337,18 @@ public class XInclude {
                         doc = resolver.resolveText(node, href, encoding, accept, accept_lang);
                     } else {
                         doc = resolver.resolveXml(node, href, accept, accept_lang);
-                        doc = expandXIncludes(doc);
                     }
+                }
+
+                XInclude nested = xinclude.newInstance();
+                if ("".equals(href)) {
+                    if (xptr == null) {
+                        throw new XIncludeLoopException("Recursive same document reference");
+                    }
+                } else {
+                    doc = fixup(node, doc, setId);
+                    doc = nested.expandXIncludes(doc);
+                    uriStack.pop();
                 }
 
                 if (xptr != null) {
@@ -365,21 +380,30 @@ public class XInclude {
                         }
                         throw new XIncludeNoFragmentException("Failed to locate fragment: " + xptr);
                     }
+                    doc = fixup(node, doc, setId);
                 }
             } catch (Exception e) {
                 if (fallback != null) {
                     doc = processFallback(fallback);
+
+                    XInclude nested = xinclude.newInstance();
+                    doc = fixup(node, doc, setId);
+                    doc = nested.expandXIncludes(doc);
+
                 } else {
                     throw e;
                 }
             }
 
+            /*
             XInclude nested = xinclude.newInstance();
             doc = fixup(node, doc, setId);
             doc = nested.expandXIncludes(doc);
             if (!"".equals(href)) {
                 uriStack.pop();
             }
+            */
+
             return doc;
         }
 
@@ -392,13 +416,9 @@ public class XInclude {
                 throw new IllegalArgumentException("XInclude fixup can only be called on a document");
             }
 
-            XdmDestination destination = new XdmDestination();
-            PipelineConfiguration pipe = document.getUnderlyingNode().getConfiguration().makePipelineConfiguration();
-            Receiver receiver = destination.getReceiver(pipe, new SerializationProperties());
-
             try {
-                receiver.setSystemId(document.getBaseURI().toASCIIString());
-                receiver.open();
+                XdmDestination destination = ReceiverUtils.makeDestination(document);
+                Receiver receiver = ReceiverUtils.makeReceiver(document, destination);
                 receiver.startDocument(0);
 
                 // Note: node is a document.
@@ -485,11 +505,9 @@ public class XInclude {
         private XdmNode processFallback(XdmNode fallback) {
             XdmSequenceIterator<XdmNode> iter = fallback.axisIterator(Axis.CHILD);
 
-            XdmDestination destination = new XdmDestination();
-            PipelineConfiguration pipe = fallback.getUnderlyingNode().getConfiguration().makePipelineConfiguration();
-            Receiver receiver = destination.getReceiver(pipe,  new SerializationProperties());
             try {
-                receiver.open();
+                XdmDestination destination = ReceiverUtils.makeDestination(fallback);
+                Receiver receiver = ReceiverUtils.makeReceiver(fallback, destination);
                 receiver.startDocument(0);
                 while (iter.hasNext()) {
                     XdmNode node = iter.next();
@@ -519,6 +537,8 @@ public class XInclude {
 
     private class TreeWalker {
         private HashMap<QName,ElementHandler> handlers = new HashMap<>();
+        private boolean sawsamedoc = false;
+        private boolean processsamedoc = false;
 
         public void register(QName name, ElementHandler handler) {
             if (handlers.containsKey(name)) {
@@ -528,15 +548,25 @@ public class XInclude {
         }
 
         public XdmNode walk(XdmNode node) throws XPathException {
-            XdmDestination destination = new XdmDestination();
-            PipelineConfiguration pipe = node.getUnderlyingNode().getConfiguration().makePipelineConfiguration();
-            Receiver receiver = destination.getReceiver(pipe,  new SerializationProperties());
-
-            receiver.open();
+            XdmDestination destination = ReceiverUtils.makeDestination(node);
+            Receiver receiver = ReceiverUtils.makeReceiver(node, destination);
             receiver.startDocument(0);
             traverse(receiver, node);
             receiver.endDocument();
             receiver.close();
+
+            if (sawsamedoc) {
+                // Second pass to resolve all the same document references
+                processsamedoc = true;
+                XdmNode doc = destination.getXdmNode();
+
+                destination = ReceiverUtils.makeDestination(doc);
+                receiver = ReceiverUtils.makeReceiver(doc, destination);
+                receiver.startDocument(0);
+                traverse(receiver, doc);
+                receiver.endDocument();
+                receiver.close();
+            }
 
             return destination.getXdmNode();
         }
@@ -555,7 +585,16 @@ public class XInclude {
                     }
                 }
             } else if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
-                if (handlers.containsKey(node.getNodeName())) {
+                boolean handleit = handlers.containsKey(node.getNodeName());
+                if (!processsamedoc && xi_include.equals(node.getNodeName())) {
+                    String href = node.getAttributeValue(_href);
+                    if (href == null || "".equals(href.trim())) {
+                        sawsamedoc = true;
+                        handleit = false;
+                    }
+                }
+
+                if (handleit) {
                     receiver.append(handlers.get(node.getNodeName()).process(node).getUnderlyingNode());
                 } else {
                     NodeInfo inode = node.getUnderlyingNode();

@@ -3,7 +3,6 @@ package com.nwalsh.sinclude.schemes;
 import com.nwalsh.sinclude.exceptions.MalformedXPointerSchemeException;
 import com.nwalsh.sinclude.exceptions.XIncludeIntegrityCheckException;
 import com.nwalsh.sinclude.xpointer.DefaultSelectionResult;
-import com.nwalsh.sinclude.xpointer.Scheme;
 import com.nwalsh.sinclude.xpointer.SchemeData;
 import com.nwalsh.sinclude.xpointer.SelectionResult;
 import com.nwalsh.sinclude.xpointer.TextScheme;

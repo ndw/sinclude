@@ -158,6 +158,28 @@ public class FakeDocumentResolver implements DocumentResolver {
         xmlMap.put("ghlinerange.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  <xi:include href='two.txt' parse='text' xpointer='L10-L15'/>"
                 + "</doc>");
+        xmlMap.put("textselfref.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>\n" +
+                "  <xi:include parse=\"text\"/>\n" +
+                "</doc>");
+        xmlMap.put("mixedselfref.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>\n" +
+                "  <xi:include parse=\"text\"/>\n" +
+                "  <xi:include href=\"one.xml\"/>\n" +
+                "</doc>");
+        xmlMap.put("xmlselfref.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>\n" +
+                "  <para xml:id='p1'>Paragraph one</para>\n" +
+                "  <section>\n" +
+                "    <para xml:id='p2'>Paragraph two</para>\n" +
+                "  </section>\n" +
+                "  <xi:include xpointer='p1'/>\n" +
+                "  <xi:include xpointer='p2'/>\n" +
+                "</doc>\n");
+        xmlMap.put("selfrefloop.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>\n" +
+                "  <para xml:id='p1'>Paragraph one</para>\n" +
+                "  <section xml:id=\"s1\">\n" +
+                "    <para xml:id='p2'>Paragraph two</para>\n" +
+                "    <xi:include xpointer='s1'/>\n" +
+                "  </section>\n" +
+                "</doc>\n");
     }
 
     private static Map<String, String> textMap = null;
@@ -274,6 +296,33 @@ public class FakeDocumentResolver implements DocumentResolver {
         expandedMap.put("ghlinerange.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>"
                 + "  This is line 10.\n\n\n\n\nThis is line 15.\n"
                 + "</doc>");
+        expandedMap.put("textselfref.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>\n" +
+                "  &lt;doc xmlns:xi='http://www.w3.org/2001/XInclude'&gt;\n" +
+                "  &lt;xi:include parse=\"text\"/&gt;\n" +
+                "&lt;/doc&gt;\n" +
+                "</doc>\n");
+        // I'm not sure I like (or completely understand) the whitespace required to pass this test
+        expandedMap.put("mixedselfref.xml", "<doc xmlns:xi=\"http://www.w3.org/2001/XInclude\">\n" +
+                "  &lt;doc xmlns:xi='http://www.w3.org/2001/XInclude'&gt;\n" +
+                "  &lt;xi:include parse=\"text\"/&gt;\n" +
+                "  &lt;xi:include href=\"one.xml\"/&gt;\n" +
+                "&lt;/doc&gt;\n" +
+                "  <doc xml:base=\"http://example.com/docs/one.xml\">" +
+                "  <p xml:id=\"one\">Paragraph one.</p>" +
+                "  <p xmlns=\"http://example.com/\">Paragraph two.</p>" +
+                "  <p xml:lang=\"fr\">Paragraphe trois.</p>" +
+                "</doc>\n" +
+                "</doc>");
+        expandedMap.put("xmlselfref.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>\n" +
+                "  <para xml:id='p1'>Paragraph one</para>\n" +
+                "  <section>\n" +
+                "    <para xml:id='p2'>Paragraph two</para>\n" +
+                "  </section>\n" +
+                "  <para xml:id='p1' xml:base=\"http://example.com/docs/xmlselfref.xml\">Paragraph one</para>\n" +
+                "  <para xml:id='p2' xml:base=\"http://example.com/docs/xmlselfref.xml\">Paragraph two</para>\n" +
+                "</doc>\n");
+        expandedMap.put("selfrefloop.xml", "<doc/>");
+
     }
 
         @Override
@@ -301,11 +350,28 @@ public class FakeDocumentResolver implements DocumentResolver {
 
     @Override
     public XdmNode resolveText(XdmNode base, String uri, String encoding, String accept, String acceptLanguage) {
-        URI baseURI = base.getBaseURI().resolve(uri);
         Logger logger = base.getProcessor().getUnderlyingConfiguration().getLogger();
-        logger.info("Resolving text XInclude: " + uri + " (" + baseURI.toASCIIString() + ")");
-        if (textMap.containsKey(uri)) {
-            String text = textMap.get(uri);
+        URI baseURI = base.getBaseURI();
+        String text = null;
+        if (uri == null || "".equals(uri)) {
+            logger.info("Resolving text same document reference");
+
+            String[] paths = base.getBaseURI().toString().split("/");
+            String key = paths[paths.length - 1];
+            if (textMap.containsKey(key)) {
+                text = textMap.get(key);
+            } else if (xmlMap.containsKey(key)) {
+                text = xmlMap.get(key);
+            }
+        } else {
+            logger.info("Resolving text XInclude: " + uri + " (" + baseURI.toASCIIString() + ")");
+            baseURI = baseURI.resolve(uri);
+            if (textMap.containsKey(uri)) {
+                text = textMap.get(uri);
+            }
+        }
+
+        if (text != null) {
             try {
                 XdmDestination destination = ReceiverUtils.makeDestination(baseURI);
                 Receiver receiver = ReceiverUtils.makeReceiver(base, destination);
@@ -396,7 +462,8 @@ public class FakeDocumentResolver implements DocumentResolver {
         try {
             Processor processor = base.getProcessor();
             DocumentBuilder builder = processor.newDocumentBuilder();
-            return builder.build(new SAXSource(new InputSource(new ByteArrayInputStream(result.getBytes(StandardCharsets.UTF_8)))));
+            XdmNode node = builder.build(new SAXSource(new InputSource(new ByteArrayInputStream(result.getBytes(StandardCharsets.UTF_8)))));
+            return node;
         } catch (SaxonApiException e) {
             throw new RuntimeException(e);
         }

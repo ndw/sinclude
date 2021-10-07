@@ -267,7 +267,7 @@ public class SearchScheme extends AbstractTextScheme implements TextScheme {
 
             return textResults(document, data.toString());
         } else {
-            return new DefaultSelectionResult(false, null);
+            return new DefaultSelectionResult(false, null, null);
         }
     }
 

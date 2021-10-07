@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
 
 public class DefaultDocumentResolver implements DocumentResolver {
     @Override
@@ -47,6 +49,9 @@ public class DefaultDocumentResolver implements DocumentResolver {
 
     @Override
     public XdmNode resolveText(XdmNode base, String uri, String encoding, String accept, String acceptLanguage) {
+        if (uri == null || "".equals(uri)) {
+            return resolveSameDocumentText(base, encoding, accept, acceptLanguage);
+        }
         Processor processor = base.getProcessor();
         UnparsedTextURIResolver resolver = processor.getUnderlyingConfiguration().getUnparsedTextURIResolver();
         try {
@@ -85,6 +90,26 @@ public class DefaultDocumentResolver implements DocumentResolver {
             }
         } catch (TransformerException | IOException e) {
             throw new XIncludeIOException(uri, e);
+        }
+    }
+
+    private XdmNode resolveSameDocumentText(XdmNode base, String encoding, String accept, String acceptLanguage) {
+        URI baseURI = base.getBaseURI();
+
+        if (baseURI != null && !"".equals(baseURI.toString())) {
+            return resolveText(base, baseURI.toASCIIString(), encoding, accept, acceptLanguage);
+        }
+
+        XdmDestination destination = ReceiverUtils.makeDestination((URI) null);
+        try {
+            Receiver receiver = ReceiverUtils.makeReceiver(base, destination);
+            receiver.startDocument(0);
+            receiver.characters(base.toString(), Loc.NONE, 0);
+            receiver.endDocument();
+            receiver.close();
+            return destination.getXdmNode();
+        } catch (XPathException e) {
+            throw new TextContentException(e);
         }
     }
 }

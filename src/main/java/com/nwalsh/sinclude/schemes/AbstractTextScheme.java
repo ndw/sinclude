@@ -30,6 +30,6 @@ public abstract class AbstractTextScheme {
     }
 
     protected SelectionResult textResults(XdmNode document, String text) {
-        return new DefaultSelectionResult(true, ReceiverUtils.makeTextDocument(document, text));
+        return new DefaultSelectionResult(true, ReceiverUtils.makeTextDocument(document, text), null);
     }
 }

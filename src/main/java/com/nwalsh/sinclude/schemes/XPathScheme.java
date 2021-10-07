@@ -73,7 +73,8 @@ public class XPathScheme extends AbstractXmlScheme implements XmlScheme {
 
         URI baseURI = null;
         try {
-            Vector<XdmNode> results = new Vector<XdmNode>();
+            Vector<XdmNode> results = new Vector<>();
+            Vector<XdmNode> nodes = new Vector<>();
 
             selector.setContextItem(document);
             for (XdmItem item : selector.evaluate()) {
@@ -84,6 +85,7 @@ public class XPathScheme extends AbstractXmlScheme implements XmlScheme {
                         baseURI = nodeBaseURI;
                     }
 
+                    nodes.add(node);
                     if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
                         results.add(fixup(node));
                     } else {
@@ -114,9 +116,9 @@ public class XPathScheme extends AbstractXmlScheme implements XmlScheme {
             receiver.close();
 
             if (results.isEmpty()) {
-                return new DefaultSelectionResult(false, null);
+                return new DefaultSelectionResult(false, null, null);
             } else {
-                return new DefaultSelectionResult(true, destination.getXdmNode());
+                return new DefaultSelectionResult(true, destination.getXdmNode(), nodes.toArray(new XdmNode[0]));
             }
         } catch (SaxonApiException | XPathException e) {
             throw new XPointerSchemeMatchException(e);

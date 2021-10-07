@@ -188,12 +188,11 @@ public class XInclude {
         TreeWalker walker = new TreeWalker();
         walker.register(xi_include, new XiIncludeHandler(this));
         walker.register(xi_fallback, new XiFallbackHandler());
-        URI z = node.getBaseURI();
         return walker.walk(node);
     }
 
     private interface ElementHandler {
-        public XdmNode process(XdmNode node) throws XPathException;
+        XdmNode process(XdmNode node) throws XPathException;
     }
 
     private class XiIncludeHandler implements ElementHandler {
@@ -312,17 +311,25 @@ public class XInclude {
                 }
             }
 
+            HashSet<XdmNode> ancestors = null;
             XdmNode doc = null;
             try {
                 if ("".equals(href)) {
                     if (logger != null) {
                         logger.debug(DebuggingLogger.XINCLUDE, "XInclude same document");
                     }
+
+                    ancestors = new HashSet<>();
                     XdmNode parent = node;
                     while (parent.getParent() != null) {
+                        ancestors.add(parent);
                         parent = parent.getParent();
                     }
+                    ancestors.add(parent);
                     doc = parent;
+                    if (parse == ParseType.TEXTPARSE) {
+                        doc = resolver.resolveText(doc, "", encoding, accept, accept_lang);
+                    }
                 } else {
                     if (logger != null) {
                         logger.debug(DebuggingLogger.XINCLUDE, "XInclude parse: " + href);
@@ -342,7 +349,7 @@ public class XInclude {
 
                 XInclude nested = xinclude.newInstance();
                 if ("".equals(href)) {
-                    if (xptr == null) {
+                    if (xptr == null && parse == ParseType.XMLPARSE) {
                         throw new XIncludeLoopException("Recursive same document reference");
                     }
                 } else {
@@ -361,6 +368,15 @@ public class XInclude {
                                 SchemeData[] array = new SchemeData[data.size()];
                                 data.toArray(array);
                                 SelectionResult result = pointer.select(array, doc);
+
+                                if ("".equals(href)) {
+                                    for (XdmNode selected : result.getSelectedNodes()) {
+                                        if (ancestors.contains(selected)) {
+                                            throw new XIncludeLoopException("XInclude same-document reference to ancestor forms a loop");
+                                        }
+                                    }
+                                }
+
                                 Collections.addAll(data, result.getSchemeData());
                                 if (result.finished()) {
                                     XdmNode xidoc = result.getResult();
@@ -381,6 +397,7 @@ public class XInclude {
                         throw new XIncludeNoFragmentException("Failed to locate fragment: " + xptr);
                     }
                     doc = fixup(node, doc, setId);
+                    doc = nested.expandXIncludes(doc);
                 }
             } catch (Exception e) {
                 if (fallback != null) {
@@ -537,8 +554,6 @@ public class XInclude {
 
     private class TreeWalker {
         private HashMap<QName,ElementHandler> handlers = new HashMap<>();
-        private boolean sawsamedoc = false;
-        private boolean processsamedoc = false;
 
         public void register(QName name, ElementHandler handler) {
             if (handlers.containsKey(name)) {
@@ -554,20 +569,6 @@ public class XInclude {
             traverse(receiver, node);
             receiver.endDocument();
             receiver.close();
-
-            if (sawsamedoc) {
-                // Second pass to resolve all the same document references
-                processsamedoc = true;
-                XdmNode doc = destination.getXdmNode();
-
-                destination = ReceiverUtils.makeDestination(doc);
-                receiver = ReceiverUtils.makeReceiver(doc, destination);
-                receiver.startDocument(0);
-                traverse(receiver, doc);
-                receiver.endDocument();
-                receiver.close();
-            }
-
             return destination.getXdmNode();
         }
 
@@ -585,16 +586,7 @@ public class XInclude {
                     }
                 }
             } else if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
-                boolean handleit = handlers.containsKey(node.getNodeName());
-                if (!processsamedoc && xi_include.equals(node.getNodeName())) {
-                    String href = node.getAttributeValue(_href);
-                    if (href == null || "".equals(href.trim())) {
-                        sawsamedoc = true;
-                        handleit = false;
-                    }
-                }
-
-                if (handleit) {
+                if (handlers.containsKey(node.getNodeName())) {
                     receiver.append(handlers.get(node.getNodeName()).process(node).getUnderlyingNode());
                 } else {
                     NodeInfo inode = node.getUnderlyingNode();

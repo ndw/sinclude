@@ -351,4 +351,27 @@ public class XIncludeTest extends TestCase {
             fail();
         }
     }
+
+    public void testXmlTextSelfRef() {
+        compareDocs("textselfref.xml");
+    }
+
+    public void testMixedXmlTextSelfRef() {
+        compareDocs("mixedselfref.xml");
+    }
+
+    public void testXmlSelfRef() {
+        compareDocs("xmlselfref.xml");
+    }
+
+    public void testXmlSelfRefLoop() {
+        try {
+            compareDocs("selfrefloop.xml");
+            fail();
+        } catch (Exception e) {
+            if (!(e instanceof XIncludeNoFragmentException)) {
+                fail();
+            }
+        }
+    }
 }

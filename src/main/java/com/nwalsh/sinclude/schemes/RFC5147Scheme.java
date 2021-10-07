@@ -187,7 +187,7 @@ public class RFC5147Scheme extends AbstractTextScheme implements TextScheme {
         if (found) {
             return textResults(document, data.toString());
         } else {
-            return new DefaultSelectionResult(false, null);
+            return new DefaultSelectionResult(false, null, null);
         }
     }
 }

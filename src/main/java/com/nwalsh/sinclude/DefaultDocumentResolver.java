@@ -5,12 +5,11 @@ import com.nwalsh.sinclude.exceptions.XIncludeIOException;
 import com.nwalsh.sinclude.utils.ReceiverUtils;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.expr.parser.Loc;
+import net.sf.saxon.lib.ResourceRequest;
+import net.sf.saxon.lib.ResourceResolver;
 import net.sf.saxon.lib.UnparsedTextURIResolver;
-import net.sf.saxon.s9api.DocumentBuilder;
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.*;
+import net.sf.saxon.str.StringView;
 import net.sf.saxon.trans.XPathException;
 import org.xml.sax.InputSource;
 
@@ -23,19 +22,20 @@ import java.io.IOException;
 import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
 
 public class DefaultDocumentResolver implements DocumentResolver {
     @Override
     public XdmNode resolveXml(XdmNode base, String uri, String accept, String acceptLanguage) {
         Processor processor = base.getProcessor();
-        URIResolver resolver = processor.getUnderlyingConfiguration().getURIResolver();
+        ResourceResolver resolver = processor.getUnderlyingConfiguration().getResourceResolver();
         DocumentBuilder builder = processor.newDocumentBuilder();
         builder.setDTDValidation(false);
         builder.setLineNumbering(true);
         try {
-            Source source = resolver.resolve(uri, base.getBaseURI().toASCIIString());
+            ResourceRequest request = new ResourceRequest();
+            request.uri = uri;
+            request.baseUri = base.getBaseURI().toString();
+            Source source = resolver.resolve(request);
             if (source == null) {
                 String systemId = base.getBaseURI().resolve(uri).toASCIIString();
                 return builder.build(new SAXSource(new InputSource(systemId)));
@@ -81,7 +81,7 @@ public class DefaultDocumentResolver implements DocumentResolver {
             try {
                 Receiver receiver = ReceiverUtils.makeReceiver(base, destination);
                 receiver.startDocument(0);
-                receiver.characters(text.toString(), Loc.NONE, 0);
+                receiver.characters(StringView.of(text.toString()), Loc.NONE, 0);
                 receiver.endDocument();
                 receiver.close();
                 return destination.getXdmNode();
@@ -104,7 +104,7 @@ public class DefaultDocumentResolver implements DocumentResolver {
         try {
             Receiver receiver = ReceiverUtils.makeReceiver(base, destination);
             receiver.startDocument(0);
-            receiver.characters(base.toString(), Loc.NONE, 0);
+            receiver.characters(StringView.of(base.toString()), Loc.NONE, 0);
             receiver.endDocument();
             receiver.close();
             return destination.getXdmNode();

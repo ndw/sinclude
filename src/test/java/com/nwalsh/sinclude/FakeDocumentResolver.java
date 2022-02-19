@@ -16,6 +16,7 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.serialize.SerializationProperties;
+import net.sf.saxon.str.StringView;
 import net.sf.saxon.trans.XPathException;
 import org.xml.sax.InputSource;
 
@@ -376,7 +377,7 @@ public class FakeDocumentResolver implements DocumentResolver {
                 XdmDestination destination = ReceiverUtils.makeDestination(baseURI);
                 Receiver receiver = ReceiverUtils.makeReceiver(base, destination);
                 receiver.startDocument(0);
-                receiver.characters(text, Loc.NONE, 0);
+                receiver.characters(StringView.of(text), Loc.NONE, 0);
                 receiver.endDocument();
                 receiver.close();
                 return destination.getXdmNode();

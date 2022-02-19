@@ -7,6 +7,7 @@ import net.sf.saxon.expr.parser.Loc;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.serialize.SerializationProperties;
+import net.sf.saxon.str.StringView;
 import net.sf.saxon.trans.XPathException;
 
 import java.net.URI;
@@ -43,7 +44,7 @@ public class ReceiverUtils {
         try {
             Receiver receiver = ReceiverUtils.makeReceiver(node, destination);
             receiver.startDocument(0);
-            receiver.characters(text, Loc.NONE, 0);
+            receiver.characters(StringView.of(text), Loc.NONE, 0);
             receiver.endDocument();
             receiver.close();
             return destination.getXdmNode();

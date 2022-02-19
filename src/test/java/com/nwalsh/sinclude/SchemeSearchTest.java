@@ -15,6 +15,7 @@ import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.serialize.SerializationProperties;
+import net.sf.saxon.str.StringView;
 import net.sf.saxon.trans.XPathException;
 
 import java.net.URI;
@@ -59,7 +60,7 @@ public class SchemeSearchTest extends TestCase {
             PipelineConfiguration pipe = processor.getUnderlyingConfiguration().makePipelineConfiguration();
             Receiver receiver = ReceiverUtils.makeReceiver(pipe, destination);
             receiver.startDocument(0);
-            receiver.characters(doc, Loc.NONE, 0);
+            receiver.characters(StringView.of(doc), Loc.NONE, 0);
             receiver.endDocument();
             receiver.close();
             document = destination.getXdmNode();

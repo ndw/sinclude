@@ -20,6 +20,7 @@ import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.str.StringView;
 import net.sf.saxon.trans.XPathException;
 
 import java.net.URI;
@@ -106,7 +107,7 @@ public class XPathScheme extends AbstractXmlScheme implements XmlScheme {
             for (XdmNode node : results) {
                 Location loc = new Loc(node.getBaseURI().toASCIIString(), -1, -1);
                 if (node.getNodeKind() == XdmNodeKind.ATTRIBUTE) {
-                    receiver.characters(node.getStringValue(), loc, 0);
+                    receiver.characters(StringView.of(node.getStringValue()), loc, 0);
                 } else {
                     receiver.append(node.getUnderlyingValue(), loc, 0);
                 }

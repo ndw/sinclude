@@ -5,7 +5,6 @@ import com.nwalsh.sinclude.XInclude;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
-import net.sf.saxon.ma.map.KeyValuePair;
 import net.sf.saxon.ma.map.MapItem;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NodeInfo;
@@ -14,10 +13,14 @@ import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.tree.iter.AtomicIterator;
 import net.sf.saxon.type.BuiltInAtomicType;
+import net.sf.saxon.value.AtomicValue;
 import net.sf.saxon.value.QNameValue;
 import net.sf.saxon.value.SequenceType;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 
 public class XIncludeFunction extends ExtensionFunctionDefinition {
@@ -114,17 +117,32 @@ public class XIncludeFunction extends ExtensionFunctionDefinition {
 
     private HashMap<QName,String> parseMap(MapItem item) throws XPathException {
         HashMap<QName,String> options = new HashMap<>();
-        for (KeyValuePair kv : item.keyValuePairs()) {
-            QName key = null;
-            if (kv.key.getItemType() == BuiltInAtomicType.QNAME) {
-                QNameValue qkey = (QNameValue) kv.key;
-                key = new QName(qkey.getPrefix(), qkey.getNamespaceURI(), qkey.getLocalName());
-            } else {
-                throw new IllegalArgumentException("Option map keys must be QNames");
+
+        // The implementation of the keyValuePairs() method is incompatible between Saxon 10 and Saxon 11.
+        // In order to avoid having to publish two versions of this class, we use reflection to
+        // work it out at runtime. (Insert programmer barfing on his shoes emoji here.)
+        try {
+            Method keys = MapItem.class.getMethod("keys");
+            Method get = MapItem.class.getMethod("get", AtomicValue.class);
+            AtomicIterator aiter = (AtomicIterator) keys.invoke(item);
+            AtomicValue next = aiter.next();
+            while (next != null) {
+                final QName key;
+                if (next.getItemType() == BuiltInAtomicType.QNAME) {
+                    QNameValue qkey = (QNameValue) next;
+                    key = new QName(qkey.getPrefix(), qkey.getNamespaceURI(), qkey.getLocalName());
+                } else {
+                    throw new IllegalArgumentException("Option map keys must be QNames");
+                }
+
+                AtomicValue value = (AtomicValue) get.invoke(item, next);
+                options.put(key, value.getStringValue());
+                next = aiter.next();
             }
-            String value = kv.value.getStringValue();
-            options.put(key, value);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
+            throw new IllegalArgumentException("Failed to resolve MapItem with reflection");
         }
+
         return options;
     }
 }

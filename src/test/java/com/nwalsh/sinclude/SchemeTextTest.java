@@ -1,34 +1,18 @@
 package com.nwalsh.sinclude;
 
 import com.nwalsh.sinclude.utils.ReceiverUtils;
-import com.nwalsh.sinclude.xpointer.DefaultSelectionResult;
-import com.nwalsh.sinclude.xpointer.FragmentIdParser;
-import com.nwalsh.sinclude.xpointer.ParseType;
-import com.nwalsh.sinclude.xpointer.Scheme;
-import com.nwalsh.sinclude.xpointer.SchemeData;
-import com.nwalsh.sinclude.xpointer.SelectionResult;
+import com.nwalsh.sinclude.xpointer.*;
 import junit.framework.TestCase;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.expr.parser.Loc;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.serialize.SerializationProperties;
-import net.sf.saxon.str.StringView;
 import net.sf.saxon.trans.XPathException;
-import org.xml.sax.InputSource;
 
-import javax.xml.transform.sax.SAXSource;
-import java.io.ByteArrayInputStream;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 
 public class SchemeTextTest extends TestCase {
     private static final String NS_XML = "http://www.w3.org/XML/1998/namespace";
@@ -70,7 +54,7 @@ public class SchemeTextTest extends TestCase {
             PipelineConfiguration pipe = processor.getUnderlyingConfiguration().makePipelineConfiguration();
             Receiver receiver = ReceiverUtils.makeReceiver(pipe, destination);
             receiver.startDocument(0);
-            receiver.characters(StringView.of(doc), Loc.NONE, 0);
+            ReceiverUtils.handleCharacters(receiver, doc);
             receiver.endDocument();
             receiver.close();
             document = destination.getXdmNode();

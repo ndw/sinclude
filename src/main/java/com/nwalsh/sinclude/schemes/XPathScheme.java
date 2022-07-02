@@ -11,16 +11,7 @@ import com.nwalsh.sinclude.xpointer.SelectionResult;
 import com.nwalsh.sinclude.xpointer.XmlScheme;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.expr.parser.Loc;
-import net.sf.saxon.s9api.Location;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XPathCompiler;
-import net.sf.saxon.s9api.XPathExecutable;
-import net.sf.saxon.s9api.XPathSelector;
-import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.XdmItem;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.str.StringView;
+import net.sf.saxon.s9api.*;
 import net.sf.saxon.trans.XPathException;
 
 import java.net.URI;
@@ -107,7 +98,7 @@ public class XPathScheme extends AbstractXmlScheme implements XmlScheme {
             for (XdmNode node : results) {
                 Location loc = new Loc(node.getBaseURI().toASCIIString(), -1, -1);
                 if (node.getNodeKind() == XdmNodeKind.ATTRIBUTE) {
-                    receiver.characters(StringView.of(node.getStringValue()), loc, 0);
+                    ReceiverUtils.handleCharacters(receiver, node.getStringValue());
                 } else {
                     receiver.append(node.getUnderlyingValue(), loc, 0);
                 }

@@ -1,48 +1,22 @@
 package com.nwalsh.sinclude;
 
 import com.nwalsh.DebuggingLogger;
-import com.nwalsh.sinclude.exceptions.XIncludeException;
-import com.nwalsh.sinclude.exceptions.XIncludeFallbackException;
-import com.nwalsh.sinclude.exceptions.XIncludeLoopException;
-import com.nwalsh.sinclude.exceptions.XIncludeNoFragmentException;
-import com.nwalsh.sinclude.exceptions.XIncludeSyntaxException;
-import com.nwalsh.sinclude.schemes.ElementScheme;
-import com.nwalsh.sinclude.schemes.RFC5147Scheme;
-import com.nwalsh.sinclude.schemes.SearchScheme;
-import com.nwalsh.sinclude.schemes.XPathScheme;
-import com.nwalsh.sinclude.schemes.XmlnsScheme;
+import com.nwalsh.sinclude.exceptions.*;
+import com.nwalsh.sinclude.schemes.*;
 import com.nwalsh.sinclude.utils.ReceiverUtils;
-import com.nwalsh.sinclude.xpointer.DefaultFragmentIdParser;
-import com.nwalsh.sinclude.xpointer.FragmentIdParser;
-import com.nwalsh.sinclude.xpointer.ParseType;
-import com.nwalsh.sinclude.xpointer.Scheme;
-import com.nwalsh.sinclude.xpointer.SchemeData;
-import com.nwalsh.sinclude.xpointer.SelectionResult;
+import com.nwalsh.sinclude.xpointer.*;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.event.ReceiverOption;
 import net.sf.saxon.expr.parser.Loc;
-import net.sf.saxon.om.AttributeInfo;
-import net.sf.saxon.om.AttributeMap;
-import net.sf.saxon.om.EmptyAttributeMap;
-import net.sf.saxon.om.FingerprintedQName;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.NodeName;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.om.*;
+import net.sf.saxon.s9api.*;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.BuiltInAtomicType;
 
 import javax.xml.XMLConstants;
+import java.io.File;
 import java.net.URI;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Stack;
-import java.util.Vector;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -189,6 +163,25 @@ public class XInclude {
         walker.register(xi_include, new XiIncludeHandler(this));
         walker.register(xi_fallback, new XiFallbackHandler());
         return walker.walk(node);
+    }
+
+    public void expandXIncludes(File input, File output) throws SaxonApiException, XPathException {
+        Processor processor = new Processor(false);
+        DocumentBuilder builder = processor.newDocumentBuilder();
+        XdmNode node = builder.build(input);
+        logger = new DebuggingLogger(node.getUnderlyingNode().getConfiguration().getLogger());
+
+        TreeWalker walker = new TreeWalker();
+        walker.register(xi_include, new XiIncludeHandler(this));
+        walker.register(xi_fallback, new XiFallbackHandler());
+
+        XdmNode result = walker.walk(node);
+
+        Serializer serializer = processor.newSerializer(output);
+        serializer.setOutputProperty(Serializer.Property.METHOD, "xml");
+        serializer.setOutputProperty(Serializer.Property.INDENT, "no");
+        serializer.serializeNode(walker.walk(result));
+        serializer.close();
     }
 
     private interface ElementHandler {

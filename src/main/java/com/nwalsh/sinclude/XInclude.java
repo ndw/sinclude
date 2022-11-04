@@ -172,6 +172,7 @@ public class XInclude {
         logger = new DebuggingLogger(node.getUnderlyingNode().getConfiguration().getLogger());
 
         TreeWalker walker = new TreeWalker();
+        walker.setXmlBase(input.toURI());
         walker.register(xi_include, new XiIncludeHandler(this));
         walker.register(xi_fallback, new XiFallbackHandler());
 
@@ -547,12 +548,18 @@ public class XInclude {
 
     private class TreeWalker {
         private HashMap<QName,ElementHandler> handlers = new HashMap<>();
+        private URI overrideBaseURI = null;
+        private boolean root = true;
 
         public void register(QName name, ElementHandler handler) {
             if (handlers.containsKey(name)) {
                 throw new UnsupportedOperationException("Cannot have multiple handlers for the same element type");
             }
             handlers.put(name, handler);
+        }
+
+        public void setXmlBase(URI base) {
+            overrideBaseURI = base;
         }
 
         public XdmNode walk(XdmNode node) throws XPathException {
@@ -565,7 +572,7 @@ public class XInclude {
             return destination.getXdmNode();
         }
 
-        public void traverse(Receiver receiver, XdmNode node) throws XPathException {
+        private void traverse(Receiver receiver, XdmNode node) throws XPathException {
             XdmSequenceIterator<XdmNode> iter = null;
 
             if (node.getNodeKind() == XdmNodeKind.DOCUMENT) {
@@ -584,7 +591,18 @@ public class XInclude {
                 } else {
                     NodeInfo inode = node.getUnderlyingNode();
                     FingerprintedQName name = new FingerprintedQName(inode.getPrefix(), inode.getURI(), inode.getLocalPart());
-                    receiver.startElement(name, inode.getSchemaType(), inode.attributes(), inode.getAllNamespaces(), inode.saveLocation(), 0);
+
+                    final AttributeMap amap;
+                    if (root && fixupXmlBase && overrideBaseURI != null && inode.getAttributeValue(NS_XML, "base") == null) {
+                        FingerprintedQName xml_base = new FingerprintedQName("xml", NS_XML, "base");
+                        AttributeInfo base = new AttributeInfo(xml_base, BuiltInAtomicType.ANY_URI, overrideBaseURI.toString(), inode.saveLocation(), 0);
+                        amap = inode.attributes().put(base);
+                    } else {
+                        amap = inode.attributes();
+                    }
+                    root = false;
+
+                    receiver.startElement(name, inode.getSchemaType(), amap, inode.getAllNamespaces(), inode.saveLocation(), 0);
                     iter = node.axisIterator(Axis.CHILD);
                     while (iter.hasNext()) {
                         XdmNode item = iter.next();

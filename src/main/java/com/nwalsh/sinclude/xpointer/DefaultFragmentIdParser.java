@@ -12,19 +12,37 @@ import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmAtomicValue;
 
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.nwalsh.sinclude.utils.NodeUtils.xml_base;
+import static com.nwalsh.sinclude.utils.NodeUtils.xml_lang;
 
 public class DefaultFragmentIdParser implements FragmentIdParser {
     private static final QName xs_NCName = new QName("http://www.w3.org/2001/XMLSchema", "NCName");
     private static final Pattern githubLines = Pattern.compile("^L\\s*(\\d+)\\s*(-\\s*L\\s*(\\d+))?\\s*$");
     private static final Processor processor = new Processor(false);
     private static final ItemTypeFactory typeFactory = new ItemTypeFactory(processor);
-    private XInclude xinclude = null;
+    private final HashMap<QName,String> properties;
+    private final XInclude xinclude;
 
     public DefaultFragmentIdParser(XInclude xinclude) {
         this.xinclude = xinclude;
+        properties = new HashMap<>();
+    }
+
+    public void setProperty(QName property, String value) {
+        if (value == null) {
+            properties.remove(property);
+        } else {
+            properties.put(property, value);
+        }
+    }
+
+    public String getProperty(QName property) {
+        return properties.getOrDefault(property, null);
     }
 
     @Override
@@ -40,6 +58,9 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
     }
 
     private Scheme[] parseXmlFragid(String fragid) {
+        String contextLanguage = getProperty(xml_lang);
+        String contextBaseURI = getProperty(xml_base);
+
         // name
         // name/1/2/3
         // scheme(data) {scheme(data) ...}
@@ -48,7 +69,7 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
             Scheme scheme = xinclude.getScheme("element");
             if (scheme != null) {
                 if (scheme instanceof XmlScheme) {
-                    return new Scheme[] { ((XmlScheme) scheme).newInstance(fragid, xinclude) };
+                    return new Scheme[] { ((XmlScheme) scheme).newInstance(fragid, xinclude, contextLanguage, contextBaseURI) };
                 }
                 // Programmer error, someone's extended the set of scheme types in an incomplete way
                 throw new RuntimeException("Unexpected scheme type in parseXmlFragid");
@@ -60,12 +81,13 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
         try {
             // FIXME: There's probably a less expensive expensive way to do this
             ItemType itype = typeFactory.getAtomicType(xs_NCName);
+            // Don't care about the value, just the exception that might be thrown
             XdmAtomicValue avalue = new XdmAtomicValue(fragid, itype);
 
             Scheme scheme = xinclude.getScheme("element");
             if (scheme != null) {
                 if (scheme instanceof XmlScheme) {
-                    return new Scheme[] { ((XmlScheme) scheme).newInstance(fragid, xinclude) };
+                    return new Scheme[] { ((XmlScheme) scheme).newInstance(fragid, xinclude, contextLanguage, contextBaseURI) };
                 }
                 // Programmer error, someone's extended the set of scheme types in an incomplete way
                 throw new RuntimeException("Unexpected scheme type in parseXmlFragid");
@@ -191,10 +213,12 @@ public class DefaultFragmentIdParser implements FragmentIdParser {
                     throw new MalformedXPointerSchemeException("Unbalanced, unescaped parens in " + saveid);
                 }
 
+                String contextLanguage = getProperty(xml_lang);
+                String contextBaseURI = getProperty(xml_base);
                 Scheme scheme = xinclude.getScheme(name);
                 if (scheme != null) {
                     if (scheme instanceof XmlScheme) {
-                        return ((XmlScheme) scheme).newInstance(data.toString(), xinclude);
+                        return ((XmlScheme) scheme).newInstance(data.toString(), xinclude, contextLanguage, contextBaseURI);
                     }
                     if (scheme instanceof TextScheme) {
                         return ((TextScheme) scheme).newInstance(data.toString());

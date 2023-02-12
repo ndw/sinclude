@@ -1,7 +1,12 @@
 * Saxon XInclude Processor
+:PROPERTIES:
+:CUSTOM_ID: h-A2085245-5C37-47C0-A798-B9BA74A7E5DD
+:END:
 
 This is an [[http://www.w3.org/TR/xinclude][XInclude]] processor. It operates on the Saxon data model; it
 is not a streaming processor.
+
+At the Java level, it works like this:
 
 #+BEGIN_SRC java
 XdmNode document = … // You got a document from somewhere, right?
@@ -17,6 +22,9 @@ schemes could be added with relative ease, but that may be a bit
 aspirational.
 
 * Extension function
+:PROPERTIES:
+:CUSTOM_ID: h-9CC4637B-261F-45DB-8F6B-241DC0E722AF
+:END:
 
 You can use this XInclude implementation from XSLT as an extension
 function. Pass the command line option ~-init:com.nwalsh.xslt.Register~
@@ -48,7 +56,45 @@ map is a map from QName keys to values. Only two keys are recognized:
 value for each is “true”. You can omit the second argument entirely if
 you’re happy with those defaults.
 
+** Command line example
+:PROPERTIES:
+:CUSTOM_ID: h-38B19AEE-42B0-4828-A637-5E146C8334D7
+:END:
+
+You can use the ~xinclude.xsl~ file included in the distribution to
+expand the XIncludes in a document.
+
+The trickiest part, as usual with Java applications, is arranging for
+the correct classpath. You need to include the Saxon jar file, the
+SInclude jar file, and any other jars that are necessary for
+dependencies (for example, the XML Resolver jar files for Saxon 11+).
+
+If you have downloaded Saxon HE 11.5 and unzipped it into the
+directory ~saxon~, the following classpath will work:
+
+#+BEGIN_SRC
+export CLASSPATH=saxon/saxon-he-11.5.jar\
+:saxon/lib/xmlresolver-4.6.4.jar\
+:build/libs/sinclude-4.2.1.jar
+#+END_SRC
+
+On Windows, the syntax is different. And you may find it more
+convienent to run from a shell script. The actual transformation is:
+
+#+BEGIN_SRC
+java -cp $CLASSPATH net.sf.saxon.Transform \
+     -init:com.nwalsh.xslt.Register \
+     -xsl:src/test/resources/xinclude.xsl \
+     -s:input-document.xml -o:output-docuent.xml 
+#+END_SRC
+
+The =-init:= option will make sure that Saxon can find and use the
+extension function.
+
 * XPointer schemes
+:PROPERTIES:
+:CUSTOM_ID: h-38009E5E-7A17-49A7-9857-22D7201BB1D8
+:END:
 
 The standard [[https://www.w3.org/TR/xptr-xmlns/][xmlns()]] and [[https://www.w3.org/TR/xptr-element/][element()]] schemes are supported for XML parsing. An
 xpath() scheme is also supported. It evaluates an XPath expression against the document.

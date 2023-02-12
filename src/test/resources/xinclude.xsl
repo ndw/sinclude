@@ -3,27 +3,14 @@
                 xmlns:ext="http://nwalsh.com/xslt"
                 xmlns:xi="http://www.w3.org/2001/XInclude"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
-                exclude-result-prefixes="ext xi xs"
+                exclude-result-prefixes="#all"
                 version="3.0">
 
-<xsl:template match="/">
-  <xsl:document>
-    <xsl:apply-templates/>
-  </xsl:document>
-</xsl:template>
-
-<xsl:template match="element()">
-  <xsl:copy>
-    <xsl:apply-templates select="@*,node()"/>
-  </xsl:copy>
-</xsl:template>
+<xsl:output method="xml" encoding="utf-8" indent="no"/>
+<xsl:mode on-no-match="shallow-copy"/>
 
 <xsl:template match="xi:include">
   <xsl:sequence select="ext:xinclude(.)"/>
-</xsl:template>
-
-<xsl:template match="attribute()|text()|comment()|processing-instruction()">
-  <xsl:copy/>
 </xsl:template>
 
 </xsl:stylesheet>

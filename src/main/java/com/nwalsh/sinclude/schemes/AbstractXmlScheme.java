@@ -2,6 +2,7 @@ package com.nwalsh.sinclude.schemes;
 
 import com.nwalsh.sinclude.XInclude;
 import com.nwalsh.sinclude.exceptions.FixupException;
+import com.nwalsh.sinclude.utils.NodeUtils;
 import com.nwalsh.sinclude.utils.ReceiverUtils;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.event.ReceiverOption;
@@ -11,7 +12,6 @@ import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.FingerprintedQName;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
@@ -19,27 +19,18 @@ import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.BuiltInAtomicType;
 
-import javax.xml.XMLConstants;
+import static com.nwalsh.sinclude.utils.NodeUtils.xml_base;
+import static com.nwalsh.sinclude.utils.NodeUtils.xml_lang;
 
 public abstract class AbstractXmlScheme {
-    public static final QName xml_lang = new QName("xml", XMLConstants.XML_NS_URI, "lang");
-    public static final QName xml_base = new QName("xml", XMLConstants.XML_NS_URI, "base");
-
     private static final FingerprintedQName fq_xml_lang =
             new FingerprintedQName(xml_lang.getPrefix(), xml_lang.getNamespaceURI(), xml_lang.getLocalName());
     private static final FingerprintedQName fq_xml_base =
             new FingerprintedQName(xml_base.getPrefix(), xml_base.getNamespaceURI(), xml_base.getLocalName());
 
     protected XInclude xinclude = null;
-
-    public String getLang(XdmNode node) {
-        String lang = null;
-        while (lang == null && node.getNodeKind() == XdmNodeKind.ELEMENT) {
-            lang = node.getAttributeValue(xml_lang);
-            node = node.getParent();
-        }
-        return lang;
-    }
+    protected String contextLanguage = null;
+    protected String contextBaseURI = null;
 
     protected XdmNode fixup(XdmNode node) {
         if (!xinclude.getFixupXmlBase() && !xinclude.getFixupXmlLang()) {
@@ -48,7 +39,10 @@ public abstract class AbstractXmlScheme {
 
         String lang = null;
         if (xinclude.getFixupXmlLang() && node.getAttributeValue(xml_lang) == null) {
-            lang = getLang(node);
+            lang = NodeUtils.getLang(node);
+            if (lang == null && contextLanguage != null) {
+                lang = ""; // Issue #8
+            }
         }
 
         if (node.getNodeKind() != XdmNodeKind.ELEMENT) {
@@ -64,11 +58,13 @@ public abstract class AbstractXmlScheme {
             AttributeMap attributes = node.getUnderlyingNode().attributes();
 
             if (xinclude.getFixupXmlBase() && node.getBaseURI() != null) {
-                AttributeInfo base = new AttributeInfo(fq_xml_base,
-                        BuiltInAtomicType.UNTYPED_ATOMIC,
-                        node.getBaseURI().toASCIIString(),
-                        Loc.NONE, ReceiverOption.NONE);
-                attributes = attributes.put(base);
+                if (contextBaseURI == null || !contextBaseURI.equals(node.getBaseURI().toString())) {
+                    AttributeInfo base = new AttributeInfo(fq_xml_base,
+                            BuiltInAtomicType.UNTYPED_ATOMIC,
+                            node.getBaseURI().toString(),
+                            Loc.NONE, ReceiverOption.NONE);
+                    attributes = attributes.put(base);
+                }
             }
 
             if (lang != null) {

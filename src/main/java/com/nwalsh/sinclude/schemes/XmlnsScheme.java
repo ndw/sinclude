@@ -17,7 +17,7 @@ public class XmlnsScheme implements XmlScheme {
     private XmlnsData data = null;
 
     @Override
-    public XmlnsScheme newInstance(String fdata, XInclude xinclude) {
+    public XmlnsScheme newInstance(String fdata, XInclude xinclude, String contextLanguage, String contexBaseURI) {
         XmlnsData data = null;
         Matcher matcher = nsRE.matcher(fdata);
         if (matcher.find()) {

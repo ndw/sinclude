@@ -14,11 +14,13 @@ public class ElementScheme extends XPathScheme {
     private String fragid = null;
 
     @Override
-    public ElementScheme newInstance(String fdata, XInclude xinclude) {
+    public ElementScheme newInstance(String fdata, XInclude xinclude, String contextLanguage, String contextBaseURI) {
         ElementScheme scheme = new ElementScheme();
         scheme.xinclude = xinclude;
         scheme.fragid = fdata;
         scheme.xpath = toXPath(fdata);
+        scheme.contextLanguage = contextLanguage;
+        scheme.contextBaseURI = contextBaseURI;
         return scheme;
     }
 

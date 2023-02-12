@@ -1,24 +1,59 @@
 package com.nwalsh.sinclude;
 
 import com.nwalsh.DebuggingLogger;
-import com.nwalsh.sinclude.exceptions.*;
-import com.nwalsh.sinclude.schemes.*;
+import com.nwalsh.sinclude.exceptions.XIncludeException;
+import com.nwalsh.sinclude.exceptions.XIncludeFallbackException;
+import com.nwalsh.sinclude.exceptions.XIncludeLoopException;
+import com.nwalsh.sinclude.exceptions.XIncludeNoFragmentException;
+import com.nwalsh.sinclude.exceptions.XIncludeSyntaxException;
+import com.nwalsh.sinclude.schemes.ElementScheme;
+import com.nwalsh.sinclude.schemes.RFC5147Scheme;
+import com.nwalsh.sinclude.schemes.SearchScheme;
+import com.nwalsh.sinclude.schemes.XPathScheme;
+import com.nwalsh.sinclude.schemes.XmlnsScheme;
+import com.nwalsh.sinclude.utils.NodeUtils;
 import com.nwalsh.sinclude.utils.ReceiverUtils;
-import com.nwalsh.sinclude.xpointer.*;
+import com.nwalsh.sinclude.xpointer.DefaultFragmentIdParser;
+import com.nwalsh.sinclude.xpointer.FragmentIdParser;
+import com.nwalsh.sinclude.xpointer.ParseType;
+import com.nwalsh.sinclude.xpointer.Scheme;
+import com.nwalsh.sinclude.xpointer.SchemeData;
+import com.nwalsh.sinclude.xpointer.SelectionResult;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.event.ReceiverOption;
 import net.sf.saxon.expr.parser.Loc;
-import net.sf.saxon.om.*;
-import net.sf.saxon.s9api.*;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.FingerprintedQName;
+import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.om.NodeName;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.DocumentBuilder;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.XdmDestination;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.BuiltInAtomicType;
 
-import javax.xml.XMLConstants;
 import java.io.File;
 import java.net.URI;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Stack;
+import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.nwalsh.sinclude.utils.NodeUtils.xml_base;
+import static com.nwalsh.sinclude.utils.NodeUtils.xml_id;
+import static com.nwalsh.sinclude.utils.NodeUtils.xml_lang;
 
 public class XInclude {
     private static final String NS_XML = "http://www.w3.org/XML/1998/namespace";
@@ -27,10 +62,6 @@ public class XInclude {
     private static final QName xi_fallback = new QName(NS_XINCLUDE, "fallback");
 
     private static final String localAttrNS = "http://www.w3.org/2001/XInclude/local-attributes";
-
-    private static final QName xml_base = new QName("xml", XMLConstants.XML_NS_URI, "base");
-    private static final QName xml_lang = new QName("xml", XMLConstants.XML_NS_URI, "lang");
-    private static final QName xml_id = new QName("xml", XMLConstants.XML_NS_URI, "id");
 
     private static final QName _set_xml_id = new QName("", "set-xml-id");
     private static final QName _accept = new QName("", "accept");
@@ -355,6 +386,10 @@ public class XInclude {
                 if (xptr != null) {
                     Exception lastException = null;
                     boolean success = false;
+
+                    fragmentIdParser.setProperty(xml_base, node.getParent().getBaseURI().toString());
+                    fragmentIdParser.setProperty(xml_lang, NodeUtils.getLang(node.getParent()));
+
                     Scheme[] pointers = fragmentIdParser.parseFragmentIdentifier(parse, xptr);
                     for (Scheme pointer : pointers) {
                         if (!success) {
@@ -384,6 +419,10 @@ public class XInclude {
                             }
                         }
                     }
+
+                    fragmentIdParser.setProperty(xml_base, null);
+                    fragmentIdParser.setProperty(xml_lang, null);
+
                     if (!success) {
                         if (lastException != null) {
                             throw new XIncludeNoFragmentException("Failed to locate fragment: " + xptr + " (" + lastException.getMessage() + ")", lastException);
@@ -419,13 +458,16 @@ public class XInclude {
         }
 
         private XdmNode fixup(XdmNode xinclude, XdmNode document, String setId) {
-            // Fixing up xml:base is usually handled by the fragid processor.
+            // Fixup is usually handled by the fragid processor.
+
             // It's only ever true here if we're XIncluding a whole document.
-            // Consequently, fixupLang never applies here.
             if (document.getNodeKind() != XdmNodeKind.DOCUMENT) {
                 // This is an internal error and should never happen
                 throw new IllegalArgumentException("XInclude fixup can only be called on a document");
             }
+
+            String contextLanguage = NodeUtils.getLang(xinclude.getParent());
+            String contextBaseURI = NodeUtils.getLang(xinclude.getParent());
 
             try {
                 XdmDestination destination = ReceiverUtils.makeDestination(document);
@@ -473,15 +515,28 @@ public class XInclude {
                             }
                         }
 
-                        if (getFixupXmlBase()) {
-                            // If fixupXmlBase is true, this nodes base URI will be correct because either:
-                            // 1. The XPathScheme will have already done fixup or
-                            // 2. The whole document is being XIncluded (in which case fixup is still necessary)
-                            AttributeInfo base = new AttributeInfo(fq_xml_base,
-                                    BuiltInAtomicType.UNTYPED_ATOMIC,
-                                    node.getBaseURI().toASCIIString(),
-                                    Loc.NONE, ReceiverOption.NONE);
-                            amap = amap.put(base);
+                        if (getFixupXmlBase() && node.getBaseURI() != null) {
+                            if (contextBaseURI == null || !contextBaseURI.equals(node.getBaseURI().toString())) {
+                                AttributeInfo base = new AttributeInfo(fq_xml_base,
+                                        BuiltInAtomicType.UNTYPED_ATOMIC,
+                                        node.getBaseURI().toString(),
+                                        Loc.NONE, ReceiverOption.NONE);
+                                amap = amap.put(base);
+                            }
+                        }
+
+                        if (getFixupXmlLang()) {
+                            String lang = NodeUtils.getLang(node);
+                            if (lang == null && contextLanguage != null) {
+                                lang = "";
+                            }
+                            if (lang != null) {
+                                AttributeInfo xml_lang = new AttributeInfo(fq_xml_lang,
+                                        BuiltInAtomicType.UNTYPED_ATOMIC,
+                                        lang,
+                                        Loc.NONE, ReceiverOption.NONE);
+                                amap = amap.put(xml_lang);
+                            }
                         }
 
                         for (AttributeInfo ainfo : attributes) {

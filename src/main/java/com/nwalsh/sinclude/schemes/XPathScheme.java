@@ -21,10 +21,12 @@ public class XPathScheme extends AbstractXmlScheme implements XmlScheme {
     protected String xpath = null;
 
     @Override
-    public XPathScheme newInstance(String fdata, XInclude xinclude) {
+    public XPathScheme newInstance(String fdata, XInclude xinclude, String contextLanguage, String contextBaseURI) {
         XPathScheme scheme = new XPathScheme();
         scheme.xpath = fdata;
         scheme.xinclude = xinclude;
+        scheme.contextLanguage = contextLanguage;
+        scheme.contextBaseURI = contextBaseURI;
         return scheme;
     }
 

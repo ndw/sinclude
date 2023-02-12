@@ -1,0 +1,11 @@
+<doc xml:lang="en" xmlns:xi='http://www.w3.org/2001/XInclude'>
+  <chap>
+    <p>This document is in English.</p>
+    <xi:include href="lang-en.xml" xpointer="element(/1/1)"/>
+    <xi:include href="lang-de.xml" xpointer="element(/1/1)"/>
+    <xi:include href="lang-xx.xml" xpointer="element(/1/1)"/>
+  </chap>
+  <xi:include href="lang-en.xml"/>
+  <xi:include href="lang-de.xml"/>
+  <xi:include href="lang-xx.xml"/>
+</doc>

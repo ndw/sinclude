@@ -2,6 +2,7 @@ package com.nwalsh.sinclude.schemes;
 
 import com.nwalsh.sinclude.XInclude;
 import com.nwalsh.sinclude.exceptions.FixupException;
+import com.nwalsh.sinclude.utils.NamespaceUtils;
 import com.nwalsh.sinclude.utils.NodeUtils;
 import com.nwalsh.sinclude.utils.ReceiverUtils;
 import net.sf.saxon.event.Receiver;
@@ -24,9 +25,9 @@ import static com.nwalsh.sinclude.utils.NodeUtils.xml_lang;
 
 public abstract class AbstractXmlScheme {
     private static final FingerprintedQName fq_xml_lang =
-            new FingerprintedQName(xml_lang.getPrefix(), xml_lang.getNamespaceURI(), xml_lang.getLocalName());
+            NamespaceUtils.fqName(xml_lang.getPrefix(), xml_lang.getNamespaceURI(), xml_lang.getLocalName());
     private static final FingerprintedQName fq_xml_base =
-            new FingerprintedQName(xml_base.getPrefix(), xml_base.getNamespaceURI(), xml_base.getLocalName());
+            NamespaceUtils.fqName(xml_base.getPrefix(), xml_base.getNamespaceURI(), xml_base.getLocalName());
 
     protected XInclude xinclude = null;
     protected String contextLanguage = null;
@@ -76,7 +77,7 @@ public abstract class AbstractXmlScheme {
             }
 
             NodeInfo ni = node.getUnderlyingNode();
-            FingerprintedQName name = new FingerprintedQName(ni.getPrefix(), ni.getURI(), ni.getLocalPart());
+            FingerprintedQName name = NamespaceUtils.fqName(ni.getPrefix(), ni.getURI(), ni.getLocalPart());
             receiver.startElement(name, ni.getSchemaType(), attributes, ni.getAllNamespaces(), ni.saveLocation(), 0);
             XdmSequenceIterator<XdmNode> citer = node.axisIterator(Axis.CHILD);
             while (citer.hasNext()) {

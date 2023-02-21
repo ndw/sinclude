@@ -35,6 +35,10 @@ buildConfig {
   buildConfigField('String', 'SAXON_VERSION', "\"${saxonVersion}\"")
 }
 
+test {
+    testLogging.showStandardStreams = true
+}
+
 jar {
   archiveBaseName = "sinclude-${sincludeVersion}"
   manifest {

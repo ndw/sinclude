@@ -52,4 +52,6 @@ jobs:
 
       - name: Build
         run: |
-          ./gradlew dist
+          ./gradlew -PsaxonVersion=10.9 clean test
+          ./gradlew -PsaxonVersion=11.5 clean test
+          ./gradlew clean dist

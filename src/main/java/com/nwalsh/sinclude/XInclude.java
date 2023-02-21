@@ -11,6 +11,7 @@ import com.nwalsh.sinclude.schemes.RFC5147Scheme;
 import com.nwalsh.sinclude.schemes.SearchScheme;
 import com.nwalsh.sinclude.schemes.XPathScheme;
 import com.nwalsh.sinclude.schemes.XmlnsScheme;
+import com.nwalsh.sinclude.utils.NamespaceUtils;
 import com.nwalsh.sinclude.utils.NodeUtils;
 import com.nwalsh.sinclude.utils.ReceiverUtils;
 import com.nwalsh.sinclude.xpointer.DefaultFragmentIdParser;
@@ -76,23 +77,20 @@ public class XInclude {
     private static final Pattern charEqual = Pattern.compile("char\\s*=\\s*\\(.*\\)\\s*");
     private static final Pattern searchEqual = Pattern.compile("search\\s*=\\s*\\(.*\\)\\s*");
 
-    private static final FingerprintedQName fq_xml_id =
-            new FingerprintedQName(xml_id.getPrefix(), xml_id.getNamespaceURI(), xml_id.getLocalName());
-    private static final FingerprintedQName fq_xml_lang =
-            new FingerprintedQName(xml_lang.getPrefix(), xml_lang.getNamespaceURI(), xml_lang.getLocalName());
-    private static final FingerprintedQName fq_xml_base =
-            new FingerprintedQName(xml_base.getPrefix(), xml_base.getNamespaceURI(), xml_base.getLocalName());
+    private static final FingerprintedQName fq_xml_id = NamespaceUtils.fqName(xml_id);
+    private static final FingerprintedQName fq_xml_lang = NamespaceUtils.fqName(xml_lang);
+    private static final FingerprintedQName fq_xml_base = NamespaceUtils.fqName(xml_base);
 
     private DebuggingLogger logger = null;
     private boolean trimText = false;
     private boolean fixupXmlBase = true;
     private boolean fixupXmlLang = true;
     private boolean copyAttributes = true; // XInclude 1.1
-    private Vector<SchemeData> data = new Vector<>();
-    private Vector<Scheme> schemes = new Vector<>();
+    private final Vector<SchemeData> data = new Vector<>();
+    private final Vector<Scheme> schemes = new Vector<>();
     private DocumentResolver resolver = null;
     private FragmentIdParser fragmentIdParser = null;
-    private Stack<URI> uriStack = new Stack<>();
+    private final Stack<URI> uriStack = new Stack<>();
 
     public XInclude() {
         resolver = new DefaultDocumentResolver();
@@ -506,7 +504,7 @@ public class XInclude {
                                 if (copy) {
                                     NodeName aname = ainfo.getNodeName();
                                     if (localAttrNS.equals(aname.getURI())) {
-                                        aname = new FingerprintedQName("", "", aname.getLocalPart());
+                                        aname = NamespaceUtils.fqName("", "", aname.getLocalPart());
                                     }
 
                                     copied.add(aname);
@@ -547,7 +545,7 @@ public class XInclude {
                         }
 
                         NodeInfo ni = node.getUnderlyingNode();
-                        FingerprintedQName name = new FingerprintedQName(ni.getPrefix(), ni.getURI(), ni.getLocalPart());
+                        FingerprintedQName name = NamespaceUtils.fqName(ni.getPrefix(), ni.getURI(), ni.getLocalPart());
                         receiver.startElement(name, ni.getSchemaType(), amap, ni.getAllNamespaces(), ni.saveLocation(), 0);
                         XdmSequenceIterator<XdmNode> citer = node.axisIterator(Axis.CHILD);
                         while (citer.hasNext()) {
@@ -645,11 +643,11 @@ public class XInclude {
                     receiver.append(handlers.get(node.getNodeName()).process(node).getUnderlyingNode());
                 } else {
                     NodeInfo inode = node.getUnderlyingNode();
-                    FingerprintedQName name = new FingerprintedQName(inode.getPrefix(), inode.getURI(), inode.getLocalPart());
+                    FingerprintedQName name = NamespaceUtils.fqName(inode.getPrefix(), inode.getURI(), inode.getLocalPart());
 
                     final AttributeMap amap;
                     if (root && fixupXmlBase && overrideBaseURI != null && inode.getAttributeValue(NS_XML, "base") == null) {
-                        FingerprintedQName xml_base = new FingerprintedQName("xml", NS_XML, "base");
+                        FingerprintedQName xml_base = NamespaceUtils.fqName("xml", NS_XML, "base");
                         AttributeInfo base = new AttributeInfo(xml_base, BuiltInAtomicType.ANY_URI, overrideBaseURI.toString(), inode.saveLocation(), 0);
                         amap = inode.attributes().put(base);
                     } else {

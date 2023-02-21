@@ -2,6 +2,7 @@ package com.nwalsh.xslt;
 
 import com.nwalsh.DebuggingLogger;
 import com.nwalsh.sinclude.XInclude;
+import com.nwalsh.sinclude.utils.NamespaceUtils;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
@@ -129,8 +130,7 @@ public class XIncludeFunction extends ExtensionFunctionDefinition {
             while (next != null) {
                 final QName key;
                 if (next.getItemType() == BuiltInAtomicType.QNAME) {
-                    QNameValue qkey = (QNameValue) next;
-                    key = new QName(qkey.getPrefix(), qkey.getNamespaceURI(), qkey.getLocalName());
+                    key = NamespaceUtils.qName((QNameValue) next);
                 } else {
                     throw new IllegalArgumentException("Option map keys must be QNames");
                 }

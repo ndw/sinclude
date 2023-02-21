@@ -2,7 +2,6 @@ package com.nwalsh.sinclude;
 
 import com.nwalsh.sinclude.exceptions.UnknownXPointerSchemeException;
 import com.nwalsh.sinclude.exceptions.XIncludeSyntaxException;
-import com.nwalsh.sinclude.xpointer.DefaultFragmentIdParser;
 import com.nwalsh.sinclude.xpointer.FragmentIdParser;
 import com.nwalsh.sinclude.xpointer.ParseType;
 import com.nwalsh.sinclude.xpointer.Scheme;

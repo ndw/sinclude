@@ -8,6 +8,7 @@ import net.sf.saxon.value.QNameValue;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 
 // This class uses reflection to handle construction of QNames and FingerprintedQNames in a way
 // that's compatible with Saxon 10, 11, or 12
@@ -54,8 +55,15 @@ public class NamespaceUtils {
 
     public static QName qName(QNameValue qname) {
         String nsString;
-        Object ns = qname.getNamespaceURI();
-        nsString = (ns instanceof String) ? (String) ns : ns.toString();
+
+        try {
+            Method getns = qname.getClass().getMethod("getNamespaceURI");
+            Object ns = getns.invoke(qname);
+            nsString = (ns instanceof String) ? (String) ns : ns.toString();
+        } catch (NoSuchMethodException|IllegalAccessException|InvocationTargetException err) {
+            throw new XIncludeObjectModelException("Failed to getNamespaceURI on QNameValue", err);
+        }
+
         return new QName(qname.getPrefix(), nsString, qname.getLocalName());
     }
 }

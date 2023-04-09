@@ -1,0 +1,61 @@
+<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" class="no-js"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter 3. Text inclusions</title><link href="/css/pygments.css" rel="stylesheet"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link href="https://purl.org/dc/elements/1.1/" rel="schema.dc"/><meta name="dc.modified" content="2023-04-09T19:18:12Z"/><meta name="generator" content="DocBook xslTNG version 2.1.1 / 165d197 / SAXON HE 11.5"/><link href="/css/docbook-toc.css" rel="stylesheet"/><link href="/css/docbook.css" rel="stylesheet" media="screen"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><script src="https://kit.fontawesome.com/498b6706f0.js" type="text/javascript" crossorigin="anonymous"></script><link href="css/sinclude.css" rel="stylesheet"/><link rel="prev" href="ch02.html"/><link rel="next" href="ch04.html"/><link rel="up" href="index.html"/><link rel="home" href="index.html"/><script src="/js/persistent-toc.js" defer="defer"></script><script src="/js/copy-verbatim.js" defer="defer"></script><script src="/js/chunk-nav.js" defer="defer"></script></head><body><nav class="top"><span class="nav"><a title="SInclude" href="index.html"><i class="fas fa-home"></i></a> <a href="ch02.html" title="Chapter  2 .  XML inclusions"><i class="fas fa-arrow-left"></i></a> <a title="SInclude" href="index.html"><i class="fas fa-arrow-up"></i></a> <a title="Chapter  4 .  ext:xinclude  in XSLT" href="ch04.html"><i class="fas fa-arrow-right"></i></a></span><span class="title"><i class="title">SInclude</i></span></nav><main><section id="text-inclusions" db-chunk="ch03.html" db-id="d89e143" class="chapter component"><header><h2>Chapter <span class="label">3</span><span class="sep">. </span>Text inclusions</h2></header><p>The general form of a text inclusion is:</p><div class="pre-wrap highlight" db-startinglinenumber="1" db-numberoflines="4"><pre class="language-xml numbered programlisting verbatim verblines"><span class="line" db-line="1"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code><span class="nt">&lt;xi:include</span> <span class="na">xmlns:xi=</span><span class="s">'http://www.w3.org/2001/XInclude'</span></code></span></span>
+<span class="line" db-line="2"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code>            <span class="na">href=</span><span class="s">'/path/to/document.txt'</span></code></span></span>
+<span class="line" db-line="3"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code>            <span class="na">parse=</span><span class="s">'text'</span></code></span></span>
+<span class="line" db-line="4"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code>            <span class="na">fragid=</span><span class="s">'text(…)'</span><span class="nt">/&gt;</span></code></span></span>
+</pre></div><p>The <code class="tag tag-attribute">parse</code> attribute must be present
+and must have the value <code>text</code>, that’s what makes it a text
+inclusion. The fragment identifier is also optional; if it’s not
+present, the entire document is included. The attribute <code class="tag tag-attribute">xpointer</code> can be used instead of <code class="tag tag-attribute">fragid</code>, but that’s discouraged because
+technically an XPointer can only refer to an XML document.
+</p><section id="text-fragids" class="section"><header><h2><span class="label">3<span class="sep">.</span>1</span><span class="sep">. </span>XML fragment identifier schemes</h2></header><dl class="variablelist"><dt class="varlistentry"><span class="term"><code class="literal">char=</code></span></dt><dd><p>A <code class="literal">char=</code> fragment identifier is interpreted according
+to <a href="https://www.rfc-editor.org/rfc/rfc5147" class="link">RFC 5147</a>
+with <a href="#integrity" class="link">integrity checking</a>.</p></dd><dt class="varlistentry"><span class="term"><code class="literal">line=</code></span></dt><dd><p>A <code class="literal">line=</code> fragment identifier is interpreted according
+to <a href="https://www.rfc-editor.org/rfc/rfc5147" class="link">RFC 5147</a>
+with <a href="#integrity" class="link">integrity checking</a>.</p></dd><dt class="varlistentry"><span class="term"><code class="literal">L<em class="replaceable">#</em>-L<em class="replaceable">#</em></code></span></dt><dd><p>This scheme is the
+<a href="https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-a-permanent-link-to-a-code-snippet" class="link">loosely documented</a> format supported by
+GitHub. It identifies a line or range of lines, for example <code>L3</code> identifies line 3
+and <code>L3-L7</code> identifies lines 3 through 7, inclusive.
+</p></dd><dt class="varlistentry"><span class="term"><code class="literal">search=</code></span></dt><dd><p>The <code class="literal">search=</code> fragment identifier locates lines by
+<a href="#search" class="link">searching</a>
+within the text.</p></dd></dl><section id="integrity" class="section"><header><h3><span class="label">3<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">. </span>RFC 5147 integrity checking</h3></header><p>Both the <code class="literal">char=</code> and <code class="literal">line=</code>
+flavors of RFC 5147 identifiers (and the <code class="literal">search=</code>
+extension scheme) support either file size or MD5 integrity checking.
+This fragment identifier: <code>line=23,67;length=3134</code> will
+fail unless the file identified is 3,134 bytes long. Alternatively,
+<code>line=23,67;md5=135b35933056ba8d06e8d3f5f4ecd318</code> will fail
+unless the file has an <a href="https://en.wikipedia.org/wiki/MD5" class="link">MD5</a> message
+digest equal to
+<code class="literal">135b35933056ba8d06e8d3f5f4ecd318</code>.</p></section></section><section id="search" class="section"><header><h2><span class="label">3<span class="sep">.</span>2</span><span class="sep">. </span>Text searching</h2></header><p>The <code class="literal">search</code> scheme has no official standard. I
+<a href="https://norman.walsh.name/2016/09/29/search" class="link">invented
+it</a> a few years ago. The idea is that instead of using explicit character
+or line references, as RFC 5147 does, allow the user to identifiy the lines
+by what they contain.</p><p>Expressed in a lazy pseudo-BNF, it looks like this:</p><div class="pre-wrap" db-startinglinenumber="1" db-numberoflines="7"><pre class="language-none long numbered programlisting verbatim verblines"><span class="line" db-line="1"><span class="ln">1 <span class="nsep">|</span></span><span class="ld"><code>search      = "search=" startSearch? ("," endSearch?)? (";" searchOpt?)?</code></span></span>
+<span class="line" db-line="2"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code>startSearch = searchExpr (";" startOpt?)?</code></span></span>
+<span class="line" db-line="3"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code>endSearch   = searchExpr (";" endOpt?)?</code></span></span>
+<span class="line" db-line="4"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code>searchExpr  = ([0-9]+)? (.) (.*?) \2</code></span></span>
+<span class="line" db-line="5"><span class="ln">5 <span class="nsep">|</span></span><span class="ld"><code>startOpt    = "from" | "after" | "trim"</code></span></span>
+<span class="line" db-line="6"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code>endOpt      = "to" | "before" | "trim"</code></span></span>
+<span class="line" db-line="7"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code>searchOpt   = "strip" | RFC 5147 integrity checks</code></span></span>
+</pre></div><p>The core of the syntax is the <code class="literal">searchExpr</code>. A search expression is
+an optional number, followed by any quote character, followed by a
+string delimited by a second occurrence of the quote character. The
+number allows you to find a specific occurrence of the string.</p><p>The expression <code>3/abcde/</code> finds the third line that
+contains the string “abcde”. So do <code>3#abcde#</code> and <code>3xabcdex</code>. If you
+leave the occurrence number out, it defaults to 1: <code>/marker text/</code>
+finds the first line that contains the string “marker text”.</p><p>If you don’t specify a start expression, inclusion starts at the
+beginning of the file. If you don’t specify an end expression, all of
+the file after the starting match is included. It’s an error if the
+starting expression is specified and it never matches.</p><p>After that, it’s just a matter of a few useful options. On
+search expressions, the default options are <code class="literal">from</code>
+and <code class="literal">to</code>. They specify that the matched line is
+included. The values <code class="literal">after</code> and
+<code class="literal">before</code>, specify that the matched line is not
+included. The value <code class="literal">trim</code> specifies not only that the matched line is
+not included, but that any leading (in the case of start) or trailing
+(in the case of end) lines that consist entirely of whitespace are
+trimmed away.</p><p>The top level search option <code class="literal">strip</code> specifies
+that whitespace stripping should be performed on the start of each
+included line. The smallest indent value is determined and that number
+of whitespace characters is removed from the beginning of each line.
+The other top level search options are the RFC 5147 integrity check
+options.</p></section></section></main><nav class="bottom"><div class="navrow"><div class="navleft"><a title="Chapter  2 .  XML inclusions" href="ch02.html"><i class="fas fa-arrow-left"></i></a></div><div class="navmiddle"><a title="SInclude" href="index.html"><i class="fas fa-home"></i></a></div><div class="navright"><a title="Chapter  4 .  ext:xinclude  in XSLT" href="ch04.html"><i class="fas fa-arrow-right"></i></a></div></div><div class="navrow"><div class="navleft navtitle">Chapter  2 .  XML inclusions</div><div class="navmiddle"><a title="SInclude" href="index.html"><i class="fas fa-arrow-up"></i></a></div><div class="navright navtitle">Chapter  4 .  ext:xinclude  in XSLT</div></div><div class="infofooter"><span class="copyrightfooter">Copyright © 2023 Norman Walsh.</span></div><nav class="tocopen"></nav><nav class="toc"></nav><!-- Hide ToC details from user agents that don’t support JS --><script type="text/html" class="tocopen"><i class="far fa-book"></i></script><script type="text/html" class="toc"><header><span>Table of Contents</span><span class="close"><i class="far fa-window-close"></i></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%"/></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav></body></html>

@@ -447,13 +447,26 @@ public class XInclude {
             // spaces off each line. All trailing spaces are stripped, the number of leading
             // spaces is determined by the number of spaces on the first line.
             if (getTrimText() && parse == ParseType.TEXTPARSE) {
-                String text = doc.getStringValue();
-                String[] lines = text.split("\n", -1); // -1 == include empty trailing strings
+                String[] lines = doc.getStringValue().split("\n", -1); // -1 == include empty trailing strings
+
                 if (lines.length > 0) {
-                    int trimleading = 0;
-                    while (trimleading < lines[0].length() && lines[0].charAt(trimleading) == ' ') {
-                        trimleading++;
+                    int trimleading = -1;
+                    for (String line : lines) {
+                        // (Effectively) blank lines don't count
+                        if (!"".equals(line.trim())) {
+                            int leading = 0;
+                            while (leading < line.length() && line.charAt(leading) == ' ') {
+                                leading++;
+                            }
+                            if (trimleading < 0 || leading < trimleading) {
+                                trimleading = leading;
+                            }
+                            if (trimleading == 0) {
+                                break;
+                            }
+                        }
                     }
+
                     XdmDestination destination = ReceiverUtils.makeDestination(doc);
                     Receiver receiver = ReceiverUtils.makeReceiver(doc, destination);
                     for (int pos = 0; pos < lines.length; pos++) {

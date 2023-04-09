@@ -50,6 +50,11 @@ public class XIncludeTest extends TestCase {
 
     private void compareDocs(String key) {
         XInclude include = new XInclude(resolver);
+
+        if ("trimtext.xml".equals(key)) {
+            include.setTrimText(true);
+        }
+
         XdmNode doc = resolver.resolveXml(emptyDoc, key, null, null);
         XdmNode resolved = null;
         try {
@@ -362,6 +367,10 @@ public class XIncludeTest extends TestCase {
 
     public void testXmlSelfRef() {
         compareDocs("xmlselfref.xml");
+    }
+
+    public void testTrimText() {
+        compareDocs("trimtext.xml");
     }
 
     public void testXmlSelfRefLoop() {

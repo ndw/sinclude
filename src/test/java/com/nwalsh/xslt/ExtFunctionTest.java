@@ -152,35 +152,4 @@ public class ExtFunctionTest extends TestCase {
             throw new RuntimeException("Value returned where node was expected");
         }
     }
-
-    public void foo() {
-        String stylesheet = "";
-        stylesheet += "<xsl:stylesheet xmlns:xsl='http://www.w3.org/1999/XSL/Transform'\n";
-        stylesheet += "                xmlns:ext='http://nwalsh.com/xslt'\n";
-        stylesheet += "                version='3.0'>\n\n";
-        stylesheet += "<xsl:output method='text' encoding='utf-8'/>\n\n";
-        stylesheet += "<xsl:template match='/' name='main'>\n";
-        stylesheet += "  <xsl:value-of select=\"'hello world'\"/>\n";
-        stylesheet += "</xsl:template>\n\n";
-        stylesheet += "</xsl:stylesheet>\n";
-
-        ByteArrayInputStream bais = new ByteArrayInputStream(
-                stylesheet.getBytes(StandardCharsets.UTF_8));
-
-        try {
-            RawDestination result = new RawDestination();
-            XsltCompiler compiler = processor.newXsltCompiler();
-            XsltExecutable exec = compiler.compile(new SAXSource(new InputSource(bais)));
-            XsltTransformer transformer = exec.load();
-            transformer.setDestination(result);
-            transformer.setInitialTemplate(new QName("", "main"));
-            transformer.transform();
-            XdmValue value = result.getXdmValue();
-            System.err.println(value);
-        } catch (SaxonApiException sae) {
-            sae.printStackTrace();
-            TestCase.fail();
-        }
-    }
-
 }

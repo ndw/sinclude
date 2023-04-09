@@ -56,6 +56,15 @@ jobs:
           ./gradlew -PsaxonVersion=12.1 clean test
           ./gradlew clean dist
 
+      - name: Deploy master to gh-pages
+        if: ${{ env.HAVE_ACCESS_TOKEN == 'true' && env.CI_BRANCH == 'master' }}
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build/website
+          token: ${{ secrets.ACCESS_TOKEN }}
+          branch: gh-pages
+          target-folder: /
+
       - name: Publish tagged release
         uses: softprops/action-gh-release@v1
         if: ${{ env.HAVE_ACCESS_TOKEN == 'true' && env.CI_BRANCH == 'master' && env.CI_TAG != '' }}

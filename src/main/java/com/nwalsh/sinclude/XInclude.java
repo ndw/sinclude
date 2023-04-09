@@ -443,14 +443,44 @@ public class XInclude {
                 }
             }
 
-            /*
-            XInclude nested = xinclude.newInstance();
-            doc = fixup(node, doc, setId);
-            doc = nested.expandXIncludes(doc);
-            if (!"".equals(href)) {
-                uriStack.pop();
+            // If we did a text parse and trim text is true, strip leading and trailing
+            // spaces off each line. All trailing spaces are stripped, the number of leading
+            // spaces is determined by the number of spaces on the first line.
+            if (getTrimText() && parse == ParseType.TEXTPARSE) {
+                String text = doc.getStringValue();
+                String[] lines = text.split("\n", -1); // -1 == include empty trailing strings
+                if (lines.length > 0) {
+                    int trimleading = 0;
+                    while (trimleading < lines[0].length() && lines[0].charAt(trimleading) == ' ') {
+                        trimleading++;
+                    }
+                    XdmDestination destination = ReceiverUtils.makeDestination(doc);
+                    Receiver receiver = ReceiverUtils.makeReceiver(doc, destination);
+                    for (int pos = 0; pos < lines.length; pos++) {
+                        if (lines[pos].length() > 0) {
+                            int first = 0;
+                            while (first < trimleading && first < lines[pos].length() && lines[pos].charAt(first) == ' ') {
+                                first++;
+                            }
+                            if (first < lines[pos].length()) {
+                                int last = lines[pos].length()-1;
+                                while (last > first && lines[pos].charAt(last) == ' ') {
+                                    last--;
+                                }
+                                if (first != last) {
+                                    ReceiverUtils.handleCharacters(receiver, lines[pos].substring(first, last+1));
+                                }
+                            }
+                        }
+                        // Only output newlines between lines, not after the last line
+                        if (pos+1 < lines.length) {
+                            ReceiverUtils.handleCharacters(receiver, "\n");
+                        }
+                    }
+                    receiver.close();
+                    doc = destination.getXdmNode();
+                }
             }
-            */
 
             return doc;
         }

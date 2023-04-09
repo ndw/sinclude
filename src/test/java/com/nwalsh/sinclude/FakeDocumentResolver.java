@@ -171,6 +171,9 @@ public class FakeDocumentResolver implements DocumentResolver {
                 "    <xi:include xpointer='s1'/>\n" +
                 "  </section>\n" +
                 "</doc>\n");
+        xmlMap.put("trimtext.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>\n" +
+                "<xi:include href='four.txt' parse='text' fragid='L2-L4'/>\n" +
+                "</doc>\n");
     }
 
     private static Map<String, String> textMap = null;
@@ -179,6 +182,7 @@ public class FakeDocumentResolver implements DocumentResolver {
         textMap.put("one.txt", "This is line one.\n");
         textMap.put("two.txt", "\n\n\n\n\n\n\n\n\nThis is line 10.\n\n\n\n\nThis is line 15.");
         textMap.put("three.xml", "<doc>Document three.</doc>");
+        textMap.put("four.txt", "    Four leading blanks\n   Three leading blanks\n      Six leading blanks\nNo leading blanks");
     }
 
     private static Map<String, String> expandedMap = null;
@@ -313,6 +317,9 @@ public class FakeDocumentResolver implements DocumentResolver {
                 "  <para xml:id='p2' xml:base=\"http://example.com/docs/xmlselfref.xml\">Paragraph two</para>\n" +
                 "</doc>\n");
         expandedMap.put("selfrefloop.xml", "<doc/>");
+        expandedMap.put("trimtext.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>\n" +
+                "Three leading blanks\n   Six leading blanks\nNo leading blanks\n\n" +
+                "</doc>\n");
 
     }
 

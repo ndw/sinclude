@@ -32,6 +32,8 @@ buildConfig {
   packageName("com.nwalsh")
   buildConfigField('String', 'TITLE', "\"${sincludeTitle}\"")
   buildConfigField('String', 'VERSION', "\"${sincludeVersion}\"")
+  // The SAXON_VERSION isn't really relevant anymore, but removing it
+  // now could break code using the API so we'll leave it...
   buildConfigField('String', 'SAXON_VERSION', "\"${saxonVersion}\"")
 }
 
@@ -50,12 +52,12 @@ jar {
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-  classifier = 'javadoc'
+  archiveClassifier = 'javadoc'
   from javadoc.destinationDir
 }
 
 task sourcesJar(type: Jar, dependsOn: ["generateBuildConfig"]) {
-  classifier = 'sources'
+  archiveClassifier = 'sources'
   from sourceSets.main.allSource
 }
 

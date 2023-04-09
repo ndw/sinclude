@@ -29,8 +29,6 @@
 
 <xsl:param name="section-toc-depth" select="1"/>
 
-<xsl:param name="resource-base-uri" select="'/'"/>
-
 <xsl:param name="sections-inherit-from" select="'component section'"/>
 <xsl:param name="callout-default-column" select="50"/>
 

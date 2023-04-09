@@ -1,0 +1,11 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi='http://www.w3.org/2001/XInclude'
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="p-xinclude"
+         version="5.2">
+<title><code>p:xinclude</code> in XProc</title>
+
+<para>See <link xlink:href="https://xmlcalabash.com/docs/reference/p-xinclude.html">p:xinclude</link>.
+</para>
+ 
+</chapter>

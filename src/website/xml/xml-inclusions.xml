@@ -1,0 +1,64 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi='http://www.w3.org/2001/XInclude'
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="xml-inclusions"
+         version="5.2">
+<title>XML inclusions</title>
+
+<para>The general form of an XML inclusion is:</para>
+
+<programlisting language="xml"><![CDATA[<xi:include xmlns:xi='http://www.w3.org/2001/XInclude'
+            href='/path/to/document.xml'
+            parse='xml'
+            fragid='xpointer(…)'/>]]></programlisting>
+
+<para>The <tag class="attribute">parse</tag> attribute is optional in
+this case. The fragment identifier is also optional; if it’s not
+present, the entire document is included. The attribute <tag class="attribute">xpointer</tag>
+can be used instead of <tag class="attribute">fragid</tag>.</para>
+
+<section xml:id="xml-fragids">
+<title>XML fragment identifier schemes</title>
+<para>The XML fragment identifier schemes are spelled out in the 
+<link xlink:href="https://www.w3.org/TR/2003/REC-xptr-framework-20030325/">XPointer
+Framework</link>.</para>
+
+<para>SInclude supports:</para>
+<variablelist>
+<varlistentry><term><literal>id(some-id)</literal> and its shorthand syntax</term>
+<listitem>
+<para>The <literal>id</literal> scheme identifies an XML element by it’s ID. The
+shorthand syntax for this common case is simply the value of the ID, <code>some-id</code>.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>element(some-id/1/3)</literal></term>
+<listitem>
+<para>The <literal xlink:href="https://www.w3.org/TR/xptr-element/">element</literal>
+scheme identifies an XML element with an optional ID followed by a
+child sequence. The child sequence is <emphasis>just</emphasis> the
+numbers of the children (i.e., the third child of the first child is
+<code>/1/3</code>).
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>xmlns(binding)</literal></term>
+<listitem>
+<para>The <literal xlink:href="https://www.w3.org/TR/xptr-xmlns/">xmlns</literal> scheme doesn’t
+identify anything directly, but it provides a namespace binding for the XPointer parts that follow it.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>xpath(expression)</literal></term>
+<listitem>
+<para>The <literal>xpath</literal> scheme identifies content with
+XPath. The SInclude implementation makes no attempt to limit the
+expressions to XPath 1 or 2 or any other version. It simply asks Saxon
+to evaluate the expression.
+</para>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+
+</chapter>

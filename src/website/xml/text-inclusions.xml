@@ -1,0 +1,127 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi='http://www.w3.org/2001/XInclude'
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="text-inclusions"
+         version="5.2">
+<title>Text inclusions</title>
+
+<para>The general form of a text inclusion is:</para>
+
+<programlisting language="xml"><![CDATA[<xi:include xmlns:xi='http://www.w3.org/2001/XInclude'
+            href='/path/to/document.txt'
+            parse='text'
+            fragid='text(…)'/>]]></programlisting>
+
+<para>The <tag class="attribute">parse</tag> attribute must be present
+and must have the value <code>text</code>, that’s what makes it a text
+inclusion. The fragment identifier is also optional; if it’s not
+present, the entire document is included. The attribute <tag
+class="attribute">xpointer</tag> can be used instead of <tag
+class="attribute">fragid</tag>, but that’s discouraged because
+technically an XPointer can only refer to an XML document.
+</para>
+
+<section xml:id="text-fragids">
+<title>XML fragment identifier schemes</title>
+
+<variablelist>
+<varlistentry><term><literal>char=</literal></term>
+<listitem>
+<para>A <literal>char=</literal> fragment identifier is interpreted according
+to <link xlink:href="https://www.rfc-editor.org/rfc/rfc5147">RFC 5147</link>
+with <link linkend="integrity">integrity checking</link>.</para>
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>line=</literal></term>
+<listitem>
+<para>A <literal>line=</literal> fragment identifier is interpreted according
+to <link xlink:href="https://www.rfc-editor.org/rfc/rfc5147">RFC 5147</link>
+with <link linkend="integrity">integrity checking</link>.</para>
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>L<replaceable>#</replaceable>-L<replaceable>#</replaceable></literal></term>
+<listitem>
+<para>This scheme is the
+<link xlink:href="https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-a-permanent-link-to-a-code-snippet">loosely documented</link> format supported by
+GitHub. It identifies a line or range of lines, for example <code>L3</code> identifies line 3
+and <code>L3-L7</code> identifies lines 3 through 7, inclusive.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>search=</literal></term>
+<listitem>
+<para>The <literal>search=</literal> fragment identifier locates lines by
+<link linkend="search">searching</link>
+within the text.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+
+<section xml:id="integrity">
+<title>RFC 5147 integrity checking</title>
+<para>Both the <literal>char=</literal> and <literal>line=</literal>
+flavors of RFC 5147 identifiers (and the <literal>search=</literal>
+extension scheme) support either file size or MD5 integrity checking.
+This fragment identifier: <code>line=23,67;length=3134</code> will
+fail unless the file identified is 3,134 bytes long. Alternatively,
+<code>line=23,67;md5=135b35933056ba8d06e8d3f5f4ecd318</code> will fail
+unless the file has an <link
+xlink:href="https://en.wikipedia.org/wiki/MD5">MD5</link> message
+digest equal to
+<literal>135b35933056ba8d06e8d3f5f4ecd318</literal>.</para>
+</section>
+</section>
+
+<section xml:id="search">
+<title>Text searching</title>
+
+<para>The <literal>search</literal> scheme has no official standard. I
+<link xlink:href="https://norman.walsh.name/2016/09/29/search">invented
+it</link> a few years ago. The idea is that instead of using explicit character
+or line references, as RFC 5147 does, allow the user to identifiy the lines
+by what they contain.</para>
+
+<para>Expressed in a lazy pseudo-BNF, it looks like this:</para>
+
+<programlisting>search      = "search=" startSearch? ("," endSearch?)? (";" searchOpt?)?
+startSearch = searchExpr (";" startOpt?)?
+endSearch   = searchExpr (";" endOpt?)?
+searchExpr  = ([0-9]+)? (.) (.*?) \2
+startOpt    = "from" | "after" | "trim"
+endOpt      = "to" | "before" | "trim"
+searchOpt   = "strip" | RFC 5147 integrity checks</programlisting>
+
+<para>The core of the syntax is the <literal>searchExpr</literal>. A search expression is
+an optional number, followed by any quote character, followed by a
+string delimited by a second occurrence of the quote character. The
+number allows you to find a specific occurrence of the string.</para>
+
+<para>The expression <code>3/abcde/</code> finds the third line that
+contains the string “abcde”. So do <code>3#abcde#</code> and <code>3xabcdex</code>. If you
+leave the occurrence number out, it defaults to 1: <code>/marker text/</code>
+finds the first line that contains the string “marker text”.</para>
+
+<para>If you don’t specify a start expression, inclusion starts at the
+beginning of the file. If you don’t specify an end expression, all of
+the file after the starting match is included. It’s an error if the
+starting expression is specified and it never matches.</para>
+
+<para>After that, it’s just a matter of a few useful options. On
+search expressions, the default options are <literal>from</literal>
+and <literal>to</literal>. They specify that the matched line is
+included. The values <literal>after</literal> and
+<literal>before</literal>, specify that the matched line is not
+included. The value <literal>trim</literal> specifies not only that the matched line is
+not included, but that any leading (in the case of start) or trailing
+(in the case of end) lines that consist entirely of whitespace are
+trimmed away.</para>
+
+<para>The top level search option <literal>strip</literal> specifies
+that whitespace stripping should be performed on the start of each
+included line. The smallest indent value is determined and that number
+of whitespace characters is removed from the beginning of each line.
+The other top level search options are the RFC 5147 integrity check
+options.</para>
+
+</section>
+</chapter>

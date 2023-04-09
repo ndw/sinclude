@@ -54,7 +54,7 @@ jobs:
           ./gradlew -PsaxonVersion=10.9 clean test
           ./gradlew -PsaxonVersion=11.5 clean test
           ./gradlew -PsaxonVersion=12.1 clean test
-          ./gradlew clean dist
+          ./gradlew clean dist website
 
       - name: Deploy master to gh-pages
         if: ${{ env.HAVE_ACCESS_TOKEN == 'true' && env.CI_BRANCH == 'master' }}

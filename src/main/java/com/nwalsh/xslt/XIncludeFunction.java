@@ -83,12 +83,7 @@ public class XIncludeFunction extends ExtensionFunctionDefinition {
 
             boolean fixupBase = getBooleanOption(_fixup_xml_base, true);
             boolean fixupLang = getBooleanOption(_fixup_xml_lang, true);
-
-            boolean defaultTrimText = false;
-            boolean trimText = defaultTrimText;
-            if (getBooleanOption(_trim_text, false)) {
-                trimText = true;
-            }
+            boolean trimText = getBooleanOption(_trim_text, false);
 
             XdmNode doc = new XdmNode(source);
             XInclude xinclude = new XInclude();
@@ -129,7 +124,20 @@ public class XIncludeFunction extends ExtensionFunctionDefinition {
             AtomicValue next = aiter.next();
             while (next != null) {
                 final QName key;
-                if (next.getItemType() == BuiltInAtomicType.QNAME) {
+                if (next.getItemType() == BuiltInAtomicType.STRING) {
+                    String keyname = next.getStringValue();
+                    if (keyname.contains(":")) {
+                        throw new IllegalArgumentException("Option map string keys must not contain a colon");
+                    }
+                    if (keyname.equals(_fixup_xml_base.getLocalName())
+                        || keyname.equals(_fixup_xml_lang.getLocalName())
+                        || keyname.equals(_trim_text.getLocalName())) {
+                        key = new QName("", keyname);
+                    } else {
+                        throw new IllegalArgumentException("Unrecognized option map string key: " + keyname);
+                    }
+
+                } else if (next.getItemType() == BuiltInAtomicType.QNAME) {
                     key = NamespaceUtils.qName((QNameValue) next);
                 } else {
                     throw new IllegalArgumentException("Option map keys must be QNames");

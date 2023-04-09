@@ -67,7 +67,7 @@ jobs:
             build/distributions/sinclude-${{ env.CI_TAG }}.zip
 
       - name: Publish to Sonatype
-        if: ${{ env.HAVE_GPGKEYURI == 'true' && env.CI_BRANCH == 'main' && env.CI_TAG != '' }}
+        if: ${{ env.HAVE_GPGKEYURI == 'true' && env.CI_BRANCH == 'master' && env.CI_TAG != '' }}
         run: |
           curl -s -o secret.gpg ${{ secrets.GPGKEYURI }}
           ./gradlew -PsonatypeUsername=${{ secrets.SONATYPEUSER }} \

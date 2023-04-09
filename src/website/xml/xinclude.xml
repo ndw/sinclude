@@ -1,0 +1,33 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi='http://www.w3.org/2001/XInclude'
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="xinclude"
+         version="5.2">
+<title>XInclude</title>
+
+<para>The semantics of XInclude are that the <tag>xi:include</tag>
+element is replaced by whatever it identifies. If there’s an error
+retrieving the resource it identifies, the author can provide
+fallback; in this case, the <tag>xi:include</tag> element is replaced
+by the fallback. (The fallback markup can include more
+<tag>xi:include</tag> elements that can have fallback of their
+own.)</para>
+
+<para>The <tag>xi:include</tag> element can specify whether the
+resource being included is XML or text. If it’s XML, then it will be
+parsed and <tag>xi:include</tag> elements recursively expanded within
+the included parts.</para>
+
+<para>XInclude can refer to whole documents or parts of documents, it
+can even refer to parts of the document that includes the
+<tag>xi:include</tag> element. However, it must not form a loop: you
+can’t include “A” that includes “B” that includes “A” again.</para>
+
+<para>(For more details about precisely what is possible and how, consult
+<link xlink:href="https://www.w3.org/TR/xinclude-11/">XML Inclusions (XInclude) Version 1.1</link>.)
+</para>
+
+<para>SInclude supports both XML and text parsing with (or without)
+fallback. What sets SInclude apart are the fragment identifier schemes
+that it supports. </para>
+</chapter>

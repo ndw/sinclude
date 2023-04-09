@@ -1,0 +1,24 @@
+<book xmlns="http://docbook.org/ns/docbook"
+      xmlns:xi='http://www.w3.org/2001/XInclude'
+      xmlns:xlink="http://www.w3.org/1999/xlink"
+      version="5.2">
+<info>
+<title>SInclude</title>
+<subtitle>Saxon XInclude Processor</subtitle>
+<author>
+  <personname>Norm Tovey-Walsh</personname>
+</author>
+<copyright><year>2023</year><holder>Norm Tovey-Walsh</holder></copyright>
+<productname>sinclude</productname>
+<productnumber>@@VERSION@@</productnumber>
+</info>
+
+<xi:include href="intro.xml"/>
+<xi:include href="xinclude.xml"/>
+<xi:include href="xml-inclusions.xml"/>
+<xi:include href="text-inclusions.xml"/>
+<xi:include href="ext-xinclude.xml"/>
+<xi:include href="p-xinclude.xml"/>
+<xi:include href="java-api.xml"/>
+
+</book>

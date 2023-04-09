@@ -1,0 +1,37 @@
+<preface xmlns="http://docbook.org/ns/docbook"
+      xmlns:xi='http://www.w3.org/2001/XInclude'
+      xmlns:xlink="http://www.w3.org/1999/xlink"
+      xml:id="intro"
+      version="5.2">
+<title>Introduction</title>
+
+<para>SInclude is an <link xlink:href="https://www.w3.org/TR/xinclude-11/">XInclude</link>
+processor designed to work with the <link xlink:href="https://saxonica.com/">Saxon</link> Java
+processor. It works with Saxon version 10 or higher.</para>
+
+<para>This <emphasis>is not</emphasis> the default processor used by Saxon when XInclude
+processing
+<link xlink:href="https://www.saxonica.com/documentation/index.html#!sourcedocs/beyond-parsing/XInclude">is requested</link>.
+By default, Saxon relies on XInclude support in the XML parser (usually
+<link xlink:href="https://xerces.apache.org/xerces2-j/">Xerces</link>).
+This is a useful
+<link xlink:href="https://en.wikipedia.org/wiki/Separation_of_concerns">separation of
+concerns</link>. While XInclude is useful to authors, it’s not part of XSLT.
+The XInclude processor built into Xerces is a streaming processor seamlessly
+available to Saxon anywhere that XML is parsed.
+</para>
+
+<para>Unfortunately, the Xerces XInclude processor doesn’t support
+very many fragment identifier schemes and, because it’s a streaming
+processor, can’t handle any document reference or scheme that can’t be
+implemented with a one-pass, streaming algorithm.</para>
+
+<para>SInclude is a transformation of one parsed XML document into
+another<footnote><para>It is a transformation, but it isn’t
+implemented <emphasis>in XSLT</emphasis> mostly for reasons of
+implementation convenience.</para></footnote>. It isn’t limited to a single pass
+and supports an extensible range of fragment identifier schemes. This
+implementation can be used as a Java API, comes with a Saxon extension
+function, and is also the implementation used in <link
+xlink:href="https://xmlcalabash.com/">XML Calabash</link>. </para>
+</preface>

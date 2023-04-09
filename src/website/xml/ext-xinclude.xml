@@ -1,0 +1,53 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi='http://www.w3.org/2001/XInclude'
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="ext-xinclude"
+         version="5.2">
+<title><code>ext:xinclude</code> in XSLT</title>
+
+<para>SInclude ships with a Saxon extension function to perform XInclude processing
+from XSLT: <function>ext:xinclude</function>.</para>
+
+<para>To use it, bind the <code>ext</code> prefix (or any prefix you prefer) to the
+<uri>http://nwalsh.com/xslt</uri><footnote><para>For convenience, this function
+also ships with the <link xlink:href="https://xsltng.docbook.org/">DocBook
+xslTNG Stylesheets</link> where it is available with the namespace binding
+<uri>http://docbook.org/extensions/xslt</uri>. It is automatically included
+when the DocBook extension functions are registered.</para></footnote>.</para>
+
+<para>To make the function available within Saxon, make sure that the
+SInclude jar file is on your class path and then use the Saxon <code>-init</code>
+option to register the function: <code>-init:com.nwalsh.xslt.Register</code>.
+(This step allows the extension function to workin Saxon-HE.)</para>
+
+<para>Call the function, for example in <code>xsl:sequence:</code></para>
+
+<programlisting language="xml"><![CDATA[<xsl:sequence select="ext:xinclude(., map { 'fixup-xml-base': false(),
+                                            'trim-text': true() })"/>]]></programlisting>
+
+<para>Three boolean options are supported:</para>
+
+<variablelist>
+<varlistentry><term><literal>fixup-xml-base</literal></term>
+<listitem>
+<para>To enable <tag class="attribute">xml:base</tag> fixup.</para>
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>fixup-xml-lang</literal></term>
+<listitem>
+<para>To enable <tag class="attribute">xml:lang</tag> fixup.</para>
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>trim-text</literal></term>
+<listitem>
+<para>If the <literal>trim-text</literal> option is true, when a <link
+linkend="text-inclusions">text inclusion</link> is performed, leading
+and trailing whitespace will be trimmed off of each line.
+</para>
+<para>The amount of leading whitespace trimmed will be adjusted so that the least-indented
+line is flush left. All trailing whitespace is removed.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+ 
+</chapter>

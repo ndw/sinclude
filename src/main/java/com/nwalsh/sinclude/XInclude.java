@@ -467,9 +467,9 @@ public class XInclude {
                                 while (last > first && lines[pos].charAt(last) == ' ') {
                                     last--;
                                 }
-                                if (first != last) {
-                                    ReceiverUtils.handleCharacters(receiver, lines[pos].substring(first, last+1));
-                                }
+                                // There must be at least one non-space character on the line, so
+                                // this is always going to be a legal substring
+                                ReceiverUtils.handleCharacters(receiver, lines[pos].substring(first, last+1));
                             }
                         }
                         // Only output newlines between lines, not after the last line

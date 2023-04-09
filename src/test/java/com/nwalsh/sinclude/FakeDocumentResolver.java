@@ -172,7 +172,7 @@ public class FakeDocumentResolver implements DocumentResolver {
                 "  </section>\n" +
                 "</doc>\n");
         xmlMap.put("trimtext.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>\n" +
-                "<xi:include href='four.txt' parse='text' fragid='L2-L4'/>\n" +
+                "<xi:include href='four.txt' parse='text' fragid='L2-L6'/>\n" +
                 "</doc>\n");
     }
 
@@ -182,7 +182,7 @@ public class FakeDocumentResolver implements DocumentResolver {
         textMap.put("one.txt", "This is line one.\n");
         textMap.put("two.txt", "\n\n\n\n\n\n\n\n\nThis is line 10.\n\n\n\n\nThis is line 15.");
         textMap.put("three.xml", "<doc>Document three.</doc>");
-        textMap.put("four.txt", "    Four leading blanks\n   Three leading blanks\n      Six leading blanks\nNo leading blanks");
+        textMap.put("four.txt", "    Four leading blanks\n   {\n      Three leading blanks\n  }\n       Four leading blanks\nNo leading blanks");
     }
 
     private static Map<String, String> expandedMap = null;
@@ -318,7 +318,7 @@ public class FakeDocumentResolver implements DocumentResolver {
                 "</doc>\n");
         expandedMap.put("selfrefloop.xml", "<doc/>");
         expandedMap.put("trimtext.xml", "<doc xmlns:xi='http://www.w3.org/2001/XInclude'>\n" +
-                "Three leading blanks\n   Six leading blanks\nNo leading blanks\n\n" +
+                "{\n   Three leading blanks\n}\n    Four leading blanks\nNo leading blanks\n\n" +
                 "</doc>\n");
 
     }

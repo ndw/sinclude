@@ -8,15 +8,15 @@ buildscript {
   configurations.all {
     resolutionStrategy {
       force 'xml-apis:xml-apis:1.4.01',
-        "net.sf.saxon:Saxon-HE:11.5",
-        "org.xmlresolver:xmlresolver:5.1.2"
+        'net.sf.saxon:Saxon-HE:11.5',
+        'org.xmlresolver:xmlresolver:5.1.2'
     }
   }
 
   dependencies {
     classpath group: 'net.sf.saxon', name: 'Saxon-HE', version: '11.5'
     classpath group: 'org.docbook', name: 'schemas-docbook', version: '5.2CR5'
-    classpath group: 'org.docbook', name: 'docbook-xslTNG', version: '2.1.1'
+    classpath group: 'org.docbook', name: 'docbook-xslTNG', version: '2.1.2'
   }
 }
 
@@ -275,35 +275,12 @@ task copyResources() {
   dependsOn copyStaticResources
 }
 
-task website_xinclude(type: SaxonXsltTask, dependsOn: ["copyResources"]) {
+task website(type: SaxonXsltTask, dependsOn: ["copyResources"]) {
   inputs.files fileTree(dir: "${projectDir}/src/website/xml")
-
-  input "${projectDir}/src/website/xml/sinclude.xml"
-  stylesheet "${projectDir}/src/website/xsl/xinclude.xsl"
-  output "${buildDir}/tmp/sinclude.xml"
-  args(['-init:org.docbook.xsltng.extensions.Register'])
-}
-
-task website_validate(type: RelaxNGValidateTask, dependsOn: ["website_xinclude"]) {
-  input website_xinclude.outputs.files.singleFile
-  output "${buildDir}/tmp/sinclude.valid"
-  schema "${projectDir}/src/website/schema/docbook.rnc"
-  compact true
-}
-
-task website_augment(type: SaxonXsltTask, dependsOn: ["website_validate"]) {
-  input website_validate.outputs.files.singleFile
-  output "${buildDir}/xml/sinclude.xml"
-  stylesheet "${projectDir}/src/website/xsl/augment.xsl"
-  parameters (
-    'version': sincludeVersion
-  )
-}
-
-task website(type: SaxonXsltTask, dependsOn: ["website_augment"]) {
   outputs.files fileTree(dir: "${buildDir}/website", include: "*.html")
 
-  input website_augment.outputs.files.singleFile
+  //input website_augment.outputs.files.singleFile
+  input "${projectDir}/src/website/xml/sinclude.xml"
   output "${buildDir}/website/index.html"
   stylesheet "${projectDir}/src/website/xsl/docbook.xsl"
   args(['-init:org.docbook.xsltng.extensions.Register'])
@@ -311,7 +288,9 @@ task website(type: SaxonXsltTask, dependsOn: ["website_augment"]) {
     'mediaobject-input-base-uri': "file:${buildDir}/xml/",
     'mediaobject-output-base-uri': "/",
     'chunk': 'index.html',
-    'chunk-output-base-uri': "${buildDir}/website/"
+    'chunk-output-base-uri': "${buildDir}/website/",
+    'docbook-transclusion': 'true',
+    'sinclude-version': sincludeVersion
   )
 }
 

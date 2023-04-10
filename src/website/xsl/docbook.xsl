@@ -19,6 +19,12 @@
 <xsl:import href="/Volumes/Projects/docbook/xslTNG/build/xslt/docbook.xsl"/>
 -->
 
+<!-- ============================================================ -->
+
+<xsl:param name="sinclude-version" as="xs:string" required="yes"/>
+
+<!-- ============================================================ -->
+
 <xsl:param name="revhistory-style" select="'list'"/>
 
 <xsl:param name="lists-of-figures"  select="'false'"/>
@@ -31,6 +37,9 @@
 
 <xsl:param name="sections-inherit-from" select="'component section'"/>
 <xsl:param name="callout-default-column" select="50"/>
+
+<xsl:param name="verbatim-numbered-elements" select="''"/>
+<xsl:param name="verbatim-trim-leading-blank-lines" select="'true'"/>
 
 <xsl:param name="chunk-section-depth" select="0"/>
 <xsl:param name="chunk-include" as="xs:string*"
@@ -281,11 +290,24 @@
 
 <!-- ============================================================ -->
 
-<xsl:template match="db:productname" mode="m:titlepage"
-              expand-text="yes">
+<xsl:template match="db:productname" mode="m:titlepage">
   <div class="versions">
-    <p class="app">SInclude version {../db:productnumber/string()}</p>
+    <p class="app">
+      <xsl:apply-templates/>
+      <xsl:text> version </xsl:text>
+      <xsl:apply-templates select="../db:productnumber" mode="m:titlepage"/>
+    </p>
   </div>
+</xsl:template>
+
+<xsl:template match="db:productnumber" mode="m:titlepage">
+  <span class="version">
+    <xsl:apply-templates/>
+  </span>
+</xsl:template>
+
+<xsl:template match="processing-instruction(sinclude-version)">
+  <xsl:sequence select="$sinclude-version"/>
 </xsl:template>
 
 </xsl:stylesheet>

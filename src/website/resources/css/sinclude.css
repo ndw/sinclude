@@ -265,14 +265,25 @@ div.copyrightfooter {
 
 /* ============================================================ */
 
-.nineml-float {
-    position: absolute;
-    top: 25px;
-    left: 25px;
+.formalgroup {
+    border: 1px solid black;
+    margin-bottom: 1rem;
 }
 
-.nineml-float {
-    width: 48px;
+.formalgroup > header {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    padding-left: 1rem;
+}
+
+.fgbody {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: 1rem;
+}
+
+.fgbody > div:nth-child(even) {
+  margin-left: 0;
 }
 
 /* ============================================================ */

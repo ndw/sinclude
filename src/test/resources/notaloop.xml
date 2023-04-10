@@ -1,0 +1,6 @@
+<div xmlns:xi="http://www.w3.org/2001/XInclude">
+  <p>This does not constitute a loop.</p>
+  <pre>
+    <xi:include href="notaloop.xml" parse="text"/>
+  </pre>
+</div>

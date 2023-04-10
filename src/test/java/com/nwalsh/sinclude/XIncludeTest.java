@@ -344,6 +344,19 @@ public class XIncludeTest extends TestCase {
         }
     }
 
+    public void testNoLoopWithText() {
+        XInclude include = new XInclude();
+
+        try {
+            DocumentBuilder builder = processor.newDocumentBuilder();
+            XdmNode doc = builder.build(new File("src/test/resources/notaloop-doc.xml"));
+            XdmNode resolved = include.expandXIncludes(doc);
+            assertNotNull(resolved);
+        } catch (Exception e) {
+            fail();
+        }
+    }
+
     public void testNestedIncludeTest() {
         XInclude include = new XInclude();
 

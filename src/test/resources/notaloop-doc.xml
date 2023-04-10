@@ -1,0 +1,4 @@
+<document xmlns:xi="http://www.w3.org/2001/XInclude">
+  <p>Include a document that includes itself as text.</p>
+  <xi:include href="notaloop.xml"/>
+</document>

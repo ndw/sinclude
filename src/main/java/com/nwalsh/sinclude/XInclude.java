@@ -57,6 +57,7 @@ import static com.nwalsh.sinclude.utils.NodeUtils.xml_id;
 import static com.nwalsh.sinclude.utils.NodeUtils.xml_lang;
 
 public class XInclude {
+    private static final URI MAGIC_IMPOSSIBLE_URI = URI.create("https://nwalsh.com/fake/uri/for/text/include.txt");
     private static final String NS_XML = "http://www.w3.org/XML/1998/namespace";
     private static final String NS_XINCLUDE = "http://www.w3.org/2001/XInclude";
     private static final QName xi_include = new QName(NS_XINCLUDE, "include");
@@ -358,14 +359,14 @@ public class XInclude {
                         logger.debug(DebuggingLogger.XINCLUDE, "XInclude parse: " + href);
                     }
                     URI next = node.getBaseURI().resolve(href);
-                    if (uriStack.contains(next)) {
-                        throw new XIncludeLoopException("XInclude loops: " + next.toASCIIString());
-                    }
-                    uriStack.push(next);
-
                     if (parse == ParseType.TEXTPARSE) {
+                        uriStack.push(MAGIC_IMPOSSIBLE_URI);
                         doc = resolver.resolveText(node, href, encoding, accept, accept_lang);
                     } else {
+                        if (uriStack.contains(next)) {
+                            throw new XIncludeLoopException("XInclude loops: " + next.toASCIIString());
+                        }
+                        uriStack.push(next);
                         doc = resolver.resolveXml(node, href, accept, accept_lang);
                     }
                 }

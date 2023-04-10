@@ -9,8 +9,8 @@
   <personname>Norm Tovey-Walsh</personname>
 </author>
 <copyright><year>2023</year><holder>Norm Tovey-Walsh</holder></copyright>
-<productname>sinclude</productname>
-<productnumber>@@VERSION@@</productnumber>
+<productname>SInclude</productname>
+<productnumber><?sinclude-version?></productnumber>
 </info>
 
 <xi:include href="intro.xml"/>

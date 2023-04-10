@@ -5,6 +5,13 @@
          version="5.2">
 <title>Text inclusions</title>
 
+<!-- ============================================================ -->
+<!-- Note: the search strings are weird in this file because the
+     file is searching itself. Consequently, it would find the
+     search string rather than the searched-for string if the
+     search string wasn't encoded.                                -->
+<!-- ============================================================ -->
+
 <para>The general form of a text inclusion is:</para>
 
 <programlisting language="xml"><![CDATA[<xi:include xmlns:xi='http://www.w3.org/2001/XInclude'
@@ -21,6 +28,21 @@ class="attribute">fragid</tag>, but that’s discouraged because
 technically an XPointer can only refer to an XML document.
 </para>
 
+<para>Parsing the example from <xref linkend="xml-inclusions"/> as text, inserts
+the whole file:</para>
+
+<formalgroup>
+<title>Text inclusion without a fragment identifier</title>
+<example>
+<title>The XInclude</title>
+<programlisting language="xml"><![CDATA[<xi:include href="abstraction.xml" parse="text"/>]]></programlisting>
+</example>
+<example>
+<title>What’s included</title>
+<programlisting><xi:include href="abstraction.xml" parse="text"/></programlisting>
+</example>
+</formalgroup>
+
 <section xml:id="text-fragids">
 <title>XML fragment identifier schemes</title>
 
@@ -30,6 +52,24 @@ technically an XPointer can only refer to an XML document.
 <para>A <literal>char=</literal> fragment identifier is interpreted according
 to <link xlink:href="https://www.rfc-editor.org/rfc/rfc5147">RFC 5147</link>
 with <link linkend="integrity">integrity checking</link>.</para>
+
+<formalgroup>
+<title>Text inclusion with a char identifier</title>
+<example>
+<title>The XInclude</title>
+<programlisting language="xml">
+<xi:include href="text-inclusions.xml" parse="text"
+            fragid="search=/char=68&#x2c;87/,#/&#x70;rogram#;before"/>
+</programlisting>
+</example>
+<example>
+<title>What’s included</title>
+<programlisting>
+<xi:include href="abstraction.xml" parse="text" fragid="char=68,87"/>
+</programlisting>
+</example>
+</formalgroup>
+
 </listitem>
 </varlistentry>
 <varlistentry><term><literal>line=</literal></term>
@@ -37,6 +77,24 @@ with <link linkend="integrity">integrity checking</link>.</para>
 <para>A <literal>line=</literal> fragment identifier is interpreted according
 to <link xlink:href="https://www.rfc-editor.org/rfc/rfc5147">RFC 5147</link>
 with <link linkend="integrity">integrity checking</link>.</para>
+
+<formalgroup>
+<title>Text inclusion with a line identifier</title>
+<example>
+<title>The XInclude</title>
+<programlisting language="xml">
+<xi:include href="text-inclusions.xml" parse="text"
+            fragid="search=/line=3&#x2c;5/,#/&#x70;rogram#;before"/>
+</programlisting>
+</example>
+<example>
+<title>What’s included</title>
+<programlisting>
+<xi:include href="abstraction.xml" parse="text" fragid="line=3,5"/>
+</programlisting>
+</example>
+</formalgroup>
+
 </listitem>
 </varlistentry>
 <varlistentry><term><literal>L<replaceable>#</replaceable>-L<replaceable>#</replaceable></literal></term>
@@ -46,6 +104,24 @@ with <link linkend="integrity">integrity checking</link>.</para>
 GitHub. It identifies a line or range of lines, for example <code>L3</code> identifies line 3
 and <code>L3-L7</code> identifies lines 3 through 7, inclusive.
 </para>
+
+<formalgroup>
+<title>Text inclusion with a L#-L# identifier</title>
+<example>
+<title>The XInclude</title>
+<programlisting language="xml">
+<xi:include href="text-inclusions.xml" parse="text"
+            fragid="search=/L3&#x2d;L5/,#/&#x70;rogram#;before"/>
+</programlisting>
+</example>
+<example>
+<title>What’s included</title>
+<programlisting>
+<xi:include href="abstraction.xml" parse="text" fragid="L3-L5"/>
+</programlisting>
+</example>
+</formalgroup>
+
 </listitem>
 </varlistentry>
 <varlistentry><term><literal>search=</literal></term>
@@ -53,6 +129,25 @@ and <code>L3-L7</code> identifies lines 3 through 7, inclusive.
 <para>The <literal>search=</literal> fragment identifier locates lines by
 <link linkend="search">searching</link>
 within the text.</para>
+
+<formalgroup>
+<title>Text inclusion with a searchidentifier</title>
+<example>
+<title>The XInclude</title>
+<programlisting language="xml">
+<xi:include href="text-inclusions.xml" parse="text"
+            fragid="search=/search&#x20;marker/;after,#/&#x70;rogram#;before"/>
+</programlisting>
+</example>
+<example>
+<title>What’s included</title>
+<programlisting><!-- search marker -->
+<xi:include href="abstraction.xml" parse="text"
+            fragid="search=/&lt;para/,#/para#"/>
+</programlisting>
+</example>
+</formalgroup>
+
 </listitem>
 </varlistentry>
 </variablelist>
@@ -69,6 +164,35 @@ unless the file has an <link
 xlink:href="https://en.wikipedia.org/wiki/MD5">MD5</link> message
 digest equal to
 <literal>135b35933056ba8d06e8d3f5f4ecd318</literal>.</para>
+
+<formalgroup>
+<title>Text inclusion with integrity checking</title>
+<example>
+<title>The XInclude</title>
+<programlisting language="xml">
+<xi:include href="text-inclusions.xml" parse="text"
+            fragid="search=#marker&#x20;two#;after,#/&#x70;rogram#;before"/>
+</programlisting>
+</example>
+<example>
+<title>What’s included</title>
+<programlisting> <!-- marker two -->
+<xi:include href="abstraction.xml" parse="text"
+            fragid="line=3,5;md5=d6090e3280649716833e3c33269d1892"/>
+</programlisting>
+</example>
+</formalgroup>
+
+<para>Many systems come with a program named <filename>md5</filename>
+that will compute the MD5 hash of a file:</para>
+
+<programlisting language="shell">$ <userinput>md5 abstraction.xml</userinput>
+<computeroutput>MD5 (abstraction.xml) = d6090e3280649716833e3c33269d1892</computeroutput>
+</programlisting>
+
+<para>Alternatively, you can specify an incorrect hash in the fragment identifier
+and SInclude will tell you what it was expecting when the integrity check fails.</para>
+
 </section>
 </section>
 

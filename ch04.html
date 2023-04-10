@@ -1,14 +1,42 @@
-<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" class="no-js"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter 4. ext:xinclude in XSLT</title><link href="./css/pygments.css" rel="stylesheet"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link href="https://purl.org/dc/elements/1.1/" rel="schema.dc"/><meta name="dc.modified" content="2023-04-10T10:17:50Z"/><meta name="generator" content="DocBook xslTNG version 2.1.1 / 165d197 / SAXON HE 11.5"/><link href="./css/docbook-toc.css" rel="stylesheet"/><link href="./css/docbook.css" rel="stylesheet" media="screen"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><script src="https://kit.fontawesome.com/498b6706f0.js" type="text/javascript" crossorigin="anonymous"></script><link href="css/sinclude.css" rel="stylesheet"/><link rel="prev" href="ch03.html"/><link rel="next" href="ch05.html"/><link rel="up" href="index.html"/><link rel="home" href="index.html"/><script src="./js/persistent-toc.js" defer="defer"></script><script src="./js/copy-verbatim.js" defer="defer"></script><script src="./js/chunk-nav.js" defer="defer"></script></head><body><nav class="top"><span class="nav"><a title="SInclude" href="index.html"><i class="fas fa-home"></i></a> <a href="ch03.html" title="Chapter  3 .  Text inclusions"><i class="fas fa-arrow-left"></i></a> <a title="SInclude" href="index.html"><i class="fas fa-arrow-up"></i></a> <a title="Chapter  5 .  p:xinclude  in XProc" href="ch05.html"><i class="fas fa-arrow-right"></i></a></span><span class="title"><i class="title">SInclude</i></span></nav><main><section id="ext-xinclude" db-chunk="ch04.html" db-id="d89e286" class="chapter component"><header><h2>Chapter <span class="label">4</span><span class="sep">. </span><code>ext:xinclude</code> in XSLT</h2></header><p>SInclude ships with a Saxon extension function to perform XInclude processing
-from XSLT: <code class="function">ext:xinclude</code>.</p><p>To use it, bind the <code>ext</code> prefix (or any prefix you prefer) to the
-<code class="uri">http://nwalsh.com/xslt</code><sup id="ext-xinclude_para2_footnote1-fref" class="footnote-number"><a href="#ext-xinclude_para2_footnote1-fnote">1</a></sup>.</p><p>To make the function available within Saxon, make sure that the
+<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" class="no-js"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter 4. ext:xinclude in XSLT</title><link href="./css/pygments.css" rel="stylesheet"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link href="https://purl.org/dc/elements/1.1/" rel="schema.dc"/><meta name="dc.modified" content="2023-04-10T12:41:45Z"/><meta name="generator" content="DocBook xslTNG version 2.1.2 / c75a917 / SAXON HE 11.5"/><link href="./css/docbook-toc.css" rel="stylesheet"/><link href="./css/docbook.css" rel="stylesheet" media="screen"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><script src="https://kit.fontawesome.com/498b6706f0.js" type="text/javascript" crossorigin="anonymous"></script><link href="css/sinclude.css" rel="stylesheet"/><link rel="prev" href="ch03.html"/><link rel="next" href="ch05.html"/><link rel="up" href="index.html"/><link rel="home" href="index.html"/><script src="./js/persistent-toc.js" defer="defer"></script><script src="./js/copy-verbatim.js" defer="defer"></script><script src="./js/chunk-nav.js" defer="defer"></script></head><body><nav class="top"><span class="nav"><a title="SInclude" href="index.html"><i class="fas fa-home"></i></a> <a href="ch03.html" title="Chapter  3 .  Text inclusions"><i class="fas fa-arrow-left"></i></a> <a title="SInclude" href="index.html"><i class="fas fa-arrow-up"></i></a> <a title="Chapter  5 .  p:xinclude  in XProc" href="ch05.html"><i class="fas fa-arrow-right"></i></a></span><span class="title"><i class="title">SInclude</i></span></nav><main><section id="ext-xinclude" db-chunk="ch04.html" db-id="d233e632" class="chapter component"><header><h2>Chapter <span class="label">4</span><span class="sep">. </span><code>ext:xinclude</code> in XSLT</h2></header>
+
+
+<p>SInclude ships with a Saxon extension function to perform XInclude processing
+from XSLT: <code class="function">ext:xinclude</code>.</p>
+
+<p>To use it, bind the <code>ext</code> prefix (or any prefix you prefer) to the
+<code class="uri">http://nwalsh.com/xslt</code><sup id="ext-xinclude_para2_footnote1-fref" class="footnote-number"><a href="#ext-xinclude_para2_footnote1-fnote">1</a></sup>.</p>
+
+<p>To make the function available within Saxon, make sure that the
 SInclude jar file is on your class path and then use the Saxon <code>-init</code>
 option to register the function: <code>-init:com.nwalsh.xslt.Register</code>.
-(This step allows the extension function to workin Saxon-HE.)</p><p>Call the function, for example in <code>xsl:sequence:</code></p><div class="pre-wrap highlight" db-startinglinenumber="1" db-numberoflines="2"><pre class="language-xml numbered programlisting verbatim verblines"><span class="line" db-line="1"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code><span class="nt">&lt;xsl:sequence</span> <span class="na">select=</span><span class="s">"ext:xinclude(., map { 'fixup-xml-base': false(),</span></code></span></span>
+(This step allows the extension function to workin Saxon-HE.)</p>
+
+<p>Call the function, for example in <code>xsl:sequence:</code></p>
+
+<div class="pre-wrap highlight"><pre class="language-xml programlisting verbatim verblines"><span class="line" db-line="1"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code><span class="nt">&lt;xsl:sequence</span> <span class="na">select=</span><span class="s">"ext:xinclude(., map { 'fixup-xml-base': false(),</span></code></span></span>
 <span class="line" db-line="2"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code><span class="s">                                            'trim-text': true() })"</span><span class="nt">/&gt;</span></code></span></span>
-</pre></div><p>Three boolean options are supported:</p><dl class="variablelist"><dt class="varlistentry"><span class="term"><code class="literal">fixup-xml-base</code></span></dt><dd><p>To enable <code class="tag tag-attribute">xml:base</code> fixup.</p></dd><dt class="varlistentry"><span class="term"><code class="literal">fixup-xml-lang</code></span></dt><dd><p>To enable <code class="tag tag-attribute">xml:lang</code> fixup.</p></dd><dt class="varlistentry"><span class="term"><code class="literal">trim-text</code></span></dt><dd><p>If the <code class="literal">trim-text</code> option is true, when a <a href="ch03.html" class="link">text inclusion</a> is performed, leading
+</pre></div>
+
+<p>Three boolean options are supported:</p>
+
+<dl class="variablelist">
+<dt class="varlistentry"><span class="term"><code class="literal">fixup-xml-base</code></span></dt><dd>
+<p>To enable <code class="tag tag-attribute">xml:base</code> fixup.</p>
+</dd>
+<dt class="varlistentry"><span class="term"><code class="literal">fixup-xml-lang</code></span></dt><dd>
+<p>To enable <code class="tag tag-attribute">xml:lang</code> fixup.</p>
+</dd>
+<dt class="varlistentry"><span class="term"><code class="literal">trim-text</code></span></dt><dd>
+<p>If the <code class="literal">trim-text</code> option is true, when a <a href="ch03.html" class="link">text inclusion</a> is performed, leading
 and trailing whitespace will be trimmed off of each line.
-</p><p>The amount of leading whitespace trimmed will be adjusted so that the least-indented
-line is flush left. All trailing whitespace is removed.</p></dd></dl></section><footer><div class="footnotes"><hr/><div class="footnote" id="ext-xinclude_para2_footnote1-fnote"><div class="footnote-number"><sup class="footnote-number"><a href="#ext-xinclude_para2_footnote1-fref">1</a></sup></div><div class="footnote-body"><p>For convenience, this function
+</p>
+<p>The amount of leading whitespace trimmed will be adjusted so that the least-indented
+line is flush left. All trailing whitespace is removed.</p>
+</dd>
+</dl>
+ 
+</section><footer><div class="footnotes"><hr/><div class="footnote" id="ext-xinclude_para2_footnote1-fnote"><div class="footnote-number"><sup class="footnote-number"><a href="#ext-xinclude_para2_footnote1-fref">1</a></sup></div><div class="footnote-body"><p>For convenience, this function
 also ships with the <a href="https://xsltng.docbook.org/" class="link">DocBook
 xslTNG Stylesheets</a> where it is available with the namespace binding
 <code class="uri">http://docbook.org/extensions/xslt</code>. It is automatically included

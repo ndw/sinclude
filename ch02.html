@@ -1,23 +1,135 @@
-<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" class="no-js"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter 2. XML inclusions</title><link href="./css/pygments.css" rel="stylesheet"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link href="https://purl.org/dc/elements/1.1/" rel="schema.dc"/><meta name="dc.modified" content="2023-04-10T10:17:50Z"/><meta name="generator" content="DocBook xslTNG version 2.1.1 / 165d197 / SAXON HE 11.5"/><link href="./css/docbook-toc.css" rel="stylesheet"/><link href="./css/docbook.css" rel="stylesheet" media="screen"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><script src="https://kit.fontawesome.com/498b6706f0.js" type="text/javascript" crossorigin="anonymous"></script><link href="css/sinclude.css" rel="stylesheet"/><link rel="prev" href="ch01.html"/><link rel="next" href="ch03.html"/><link rel="up" href="index.html"/><link rel="home" href="index.html"/><script src="./js/persistent-toc.js" defer="defer"></script><script src="./js/copy-verbatim.js" defer="defer"></script><script src="./js/chunk-nav.js" defer="defer"></script></head><body><nav class="top"><span class="nav"><a title="SInclude" href="index.html"><i class="fas fa-home"></i></a> <a href="ch01.html" title="Chapter  1 .  XInclude"><i class="fas fa-arrow-left"></i></a> <a title="SInclude" href="index.html"><i class="fas fa-arrow-up"></i></a> <a title="Chapter  3 .  Text inclusions" href="ch03.html"><i class="fas fa-arrow-right"></i></a></span><span class="title"><i class="title">SInclude</i></span></nav><main><section id="xml-inclusions" db-chunk="ch02.html" db-id="d89e75" class="chapter component"><header><h2>Chapter <span class="label">2</span><span class="sep">. </span>XML inclusions</h2></header><p>The general form of an XML inclusion is:</p><div class="pre-wrap highlight" db-startinglinenumber="1" db-numberoflines="4"><pre class="language-xml numbered programlisting verbatim verblines"><span class="line" db-line="1"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code><span class="nt">&lt;xi:include</span> <span class="na">xmlns:xi=</span><span class="s">'http://www.w3.org/2001/XInclude'</span></code></span></span>
+<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" class="no-js"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><script>(function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)</script><title>Chapter 2. XML inclusions</title><link href="./css/pygments.css" rel="stylesheet"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link href="https://purl.org/dc/elements/1.1/" rel="schema.dc"/><meta name="dc.modified" content="2023-04-10T12:41:45Z"/><meta name="generator" content="DocBook xslTNG version 2.1.2 / c75a917 / SAXON HE 11.5"/><link href="./css/docbook-toc.css" rel="stylesheet"/><link href="./css/docbook.css" rel="stylesheet" media="screen"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><script src="https://kit.fontawesome.com/498b6706f0.js" type="text/javascript" crossorigin="anonymous"></script><link href="css/sinclude.css" rel="stylesheet"/><link rel="prev" href="ch01.html"/><link rel="next" href="ch03.html"/><link rel="up" href="index.html"/><link rel="home" href="index.html"/><script src="./js/persistent-toc.js" defer="defer"></script><script src="./js/copy-verbatim.js" defer="defer"></script><script src="./js/chunk-nav.js" defer="defer"></script></head><body><nav class="top"><span class="nav"><a title="SInclude" href="index.html"><i class="fas fa-home"></i></a> <a href="ch01.html" title="Chapter  1 .  XInclude"><i class="fas fa-arrow-left"></i></a> <a title="SInclude" href="index.html"><i class="fas fa-arrow-up"></i></a> <a title="Chapter  3 .  Text inclusions" href="ch03.html"><i class="fas fa-arrow-right"></i></a></span><span class="title"><i class="title">SInclude</i></span></nav><main><section id="xml-inclusions---R_ch2" db-chunk="ch02.html" db-id="d233e87" class="chapter component"><header><h2>Chapter <span class="label">2</span><span class="sep">. </span>XML inclusions</h2></header>
+
+
+<p>The general form of an XML inclusion is:</p>
+
+<div class="pre-wrap highlight"><pre class="language-xml programlisting verbatim verblines"><span class="line" db-line="1"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code><span class="nt">&lt;xi:include</span> <span class="na">xmlns:xi=</span><span class="s">'http://www.w3.org/2001/XInclude'</span></code></span></span>
 <span class="line" db-line="2"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code>            <span class="na">href=</span><span class="s">'/path/to/document.xml'</span></code></span></span>
 <span class="line" db-line="3"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code>            <span class="na">parse=</span><span class="s">'xml'</span></code></span></span>
 <span class="line" db-line="4"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code>            <span class="na">fragid=</span><span class="s">'xpointer(…)'</span><span class="nt">/&gt;</span></code></span></span>
-</pre></div><p>The <code class="tag tag-attribute">parse</code> attribute is optional in
+</pre></div>
+
+<p>The <code class="tag tag-attribute">parse</code> attribute is optional in
 this case. The fragment identifier is also optional; if it’s not
 present, the entire document is included. The attribute <code class="tag tag-attribute">xpointer</code>
-can be used instead of <code class="tag tag-attribute">fragid</code>.</p><section id="xml-fragids" class="section"><header><h2><span class="label">2<span class="sep">.</span>1</span><span class="sep">. </span>XML fragment identifier schemes</h2></header><p>The XML fragment identifier schemes are spelled out in the 
+can be used instead of <code class="tag tag-attribute">fragid</code>.</p>
+
+<p>For the purposes of the examples that follow, let’s imagine a small XML document,
+<code class="filename">abstraction.xml</code>,
+one that I could include in it’s entirety with XInclude:</p>
+
+<div class="pre-wrap highlight"><pre class="language-xml programlisting verbatim verblines"><span class="line" db-line="1"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code><span class="nt">&lt;blockquote</span> <span class="na">xmlns=</span><span class="s">"http://docbook.org/ns/docbook"</span> <span class="na">version=</span><span class="s">"5.2"</span><span class="nt">&gt;</span></code></span></span>
+<span class="line" db-line="2"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code><span class="nt">&lt;title&gt;</span>Abstraction<span class="nt">&lt;/title&gt;</span></code></span></span>
+<span class="line" db-line="3"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code><span class="nt">&lt;attribution&gt;&lt;personname&gt;</span>Paul Hudak<span class="nt">&lt;/personname&gt;&lt;/attribution&gt;</span></code></span></span>
+<span class="line" db-line="4"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code><span class="nt">&lt;para</span> <span class="na">xml:id=</span><span class="s">"abs"</span><span class="nt">&gt;&lt;quote&gt;</span>Abstraction, abstraction and abstraction.<span class="nt">&lt;/quote&gt;</span></code></span></span>
+<span class="line" db-line="5"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code>This is the answer to the question, <span class="nt">&lt;quote&gt;</span>What are the three most</code></span></span>
+<span class="line" db-line="6"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code>important words in programming?<span class="nt">&lt;/quote&gt;&lt;/para&gt;</span></code></span></span>
+<span class="line" db-line="7"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code><span class="nt">&lt;/blockquote&gt;</span></code></span></span>
+</pre></div>
+
+<p>Like so:</p>
+
+<div id="xml-inclusions---R_ch2_formalgroup1" class="formalgroup formalobject"><header><div class="title">Example <span class="label">2<span class="sep">.</span>1</span><span class="sep">. </span>XML inclusion without a fragment identifier</div></header><div class="fgbody">
+
+<div id="xml-inclusions---R_ch2_formalgroup1_ex1" class="example formalobject">
+
+<div class="pre-wrap highlight"><pre class="language-xml programlisting verbatim verblines"><span class="line" db-line="1"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code><span class="nt">&lt;xi:include</span> <span class="na">href=</span><span class="s">"abstraction.xml"</span><span class="nt">/&gt;</span></code></span></span>
+</pre></div>
+<header><div class="title">Subexample <span class="label">2<span class="sep">.</span>1<span class="sep">.</span>1</span><span class="sep">. </span>The XInclude</div></header></div>
+<div id="xml-inclusions---R_ch2_formalgroup1_ex2" class="example formalobject">
+
+<blockquote class="blockquote"><header><div class="title">Abstraction</div></header><p id="abs---R_ch2_formalgroup1_ex2_blockquote1_para1"><q>Abstraction, abstraction and abstraction.</q>
+This is the answer to the question, <q>What are the three most
+important words in programming?</q></p><div class="attribution"><span class="first-last personname">Paul Hudak</span></div></blockquote>
+<header><div class="title">Subexample <span class="label">2<span class="sep">.</span>1<span class="sep">.</span>2</span><span class="sep">. </span>What’s included</div></header></div>
+</div></div>
+
+<section id="xml-fragids---R_ch2_s1" class="section"><header><h2><span class="label">2<span class="sep">.</span>1</span><span class="sep">. </span>XML fragment identifier schemes</h2></header>
+
+<p>The XML fragment identifier schemes are spelled out in the 
 <a href="https://www.w3.org/TR/2003/REC-xptr-framework-20030325/" class="link">XPointer
-Framework</a>.</p><p>SInclude supports:</p><dl class="long-terms variablelist"><dt class="varlistentry"><span class="term"><code class="literal">id(some-id)</code> and its shorthand syntax</span></dt><dd><p>The <code class="literal">id</code> scheme identifies an XML element by it’s ID. The
+Framework</a>.</p>
+
+<p>SInclude supports:</p>
+<dl class="long-terms variablelist">
+<dt class="varlistentry"><span class="term"><code class="literal">id(some-id)</code> and its shorthand syntax</span></dt><dd>
+<p>The <code class="literal">id</code> scheme identifies an XML element by it’s ID. The
 shorthand syntax for this common case is simply the value of the ID, <code>some-id</code>.
-</p></dd><dt class="varlistentry"><span class="term"><code class="literal">element(some-id/1/3)</code></span></dt><dd><p>The <code class="literal"><a href="https://www.w3.org/TR/xptr-element/">element</a></code>
+</p>
+
+<div id="xml-fragids---R_ch2_s1_variablelist1_varlistentry1_listitem1_formalgroup1" class="formalgroup formalobject"><header><div class="title">Example <span class="label">2<span class="sep">.</span>2</span><span class="sep">. </span>XML inclusion with fragment identifier</div></header><div class="fgbody">
+
+<div id="xml-fragids---R_ch2_s1_variablelist1_varlistentry1_listitem1_formalgroup1_ex1" class="example formalobject">
+
+<div class="pre-wrap highlight"><pre class="language-xml programlisting verbatim verblines"><span class="line" db-line="1"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code><span class="nt">&lt;xi:include</span> <span class="na">href=</span><span class="s">"abstraction.xml"</span> <span class="na">fragid=</span><span class="s">"abs"</span><span class="nt">/&gt;</span></code></span></span>
+</pre></div>
+<header><div class="title">Subexample <span class="label">2<span class="sep">.</span>2<span class="sep">.</span>1</span><span class="sep">. </span>The XInclude</div></header></div>
+<div id="xml-fragids---R_ch2_s1_variablelist1_varlistentry1_listitem1_formalgroup1_ex2" class="example formalobject">
+
+<p id="abs---R_ch2_s1_variablelist1_varlistentry1_listitem1_formalgroup1_ex2_para1"><q>Abstraction, abstraction and abstraction.</q>
+This is the answer to the question, <q>What are the three most
+important words in programming?</q></p>
+<header><div class="title">Subexample <span class="label">2<span class="sep">.</span>2<span class="sep">.</span>2</span><span class="sep">. </span>What’s included</div></header></div>
+</div></div>
+
+
+</dd>
+<dt class="varlistentry"><span class="term"><code class="literal">element(some-id/1/3)</code></span></dt><dd>
+<p>The <code class="literal"><a href="https://www.w3.org/TR/xptr-element/">element</a></code>
 scheme identifies an XML element with an optional ID followed by a
 child sequence. The child sequence is <em>just</em> the
 numbers of the children (i.e., the third child of the first child is
 <code>/1/3</code>).
-</p></dd><dt class="varlistentry"><span class="term"><code class="literal">xmlns(binding)</code></span></dt><dd><p>The <code class="literal"><a href="https://www.w3.org/TR/xptr-xmlns/">xmlns</a></code> scheme doesn’t
-identify anything directly, but it provides a namespace binding for the XPointer parts that follow it.
-</p></dd><dt class="varlistentry"><span class="term"><code class="literal">xpath(expression)</code></span></dt><dd><p>The <code class="literal">xpath</code> scheme identifies content with
+</p>
+
+<div id="xml-fragids---R_ch2_s1_variablelist1_varlistentry2_listitem1_formalgroup1" class="formalgroup formalobject"><header><div class="title">Example <span class="label">2<span class="sep">.</span>3</span><span class="sep">. </span>XML inclusion with fragment identifier and child sequence</div></header><div class="fgbody">
+
+<div id="xml-fragids---R_ch2_s1_variablelist1_varlistentry2_listitem1_formalgroup1_ex1" class="example formalobject">
+
+<div class="pre-wrap highlight"><pre class="language-xml programlisting verbatim verblines"><span class="line" db-line="1"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code><span class="nt">&lt;xi:include</span> <span class="na">href=</span><span class="s">"abstraction.xml"</span> <span class="na">fragid=</span><span class="s">"abs/2"</span><span class="nt">/&gt;</span></code></span></span>
+</pre></div>
+<header><div class="title">Subexample <span class="label">2<span class="sep">.</span>3<span class="sep">.</span>1</span><span class="sep">. </span>The XInclude</div></header></div>
+<div id="xml-fragids---R_ch2_s1_variablelist1_varlistentry2_listitem1_formalgroup1_ex2" class="example formalobject">
+
+<q>What are the three most
+important words in programming?</q>
+<header><div class="title">Subexample <span class="label">2<span class="sep">.</span>3<span class="sep">.</span>2</span><span class="sep">. </span>What’s included</div></header></div>
+</div></div>
+</dd>
+<dt class="varlistentry"><span class="term"><code class="literal">xmlns(binding)</code></span></dt><dd>
+<p>The <code class="literal"><a href="https://www.w3.org/TR/xptr-xmlns/">xmlns</a></code>
+scheme doesn’t identify anything directly, but it provides a namespace
+binding for the XPointer parts that follow it, as shown in the <code class="literal">xpath</code>
+example below.
+</p>
+</dd>
+<dt class="varlistentry"><span class="term"><code class="literal">xpath(expression)</code></span></dt><dd>
+<p>The <code class="literal">xpath</code> scheme identifies content with
 XPath. The SInclude implementation makes no attempt to limit the
 expressions to XPath 1 or 2 or any other version. It simply asks Saxon
 to evaluate the expression.
-</p></dd></dl></section></section></main><nav class="bottom"><div class="navrow"><div class="navleft"><a title="Chapter  1 .  XInclude" href="ch01.html"><i class="fas fa-arrow-left"></i></a></div><div class="navmiddle"><a title="SInclude" href="index.html"><i class="fas fa-home"></i></a></div><div class="navright"><a title="Chapter  3 .  Text inclusions" href="ch03.html"><i class="fas fa-arrow-right"></i></a></div></div><div class="navrow"><div class="navleft navtitle">Chapter  1 .  XInclude</div><div class="navmiddle"><a title="SInclude" href="index.html"><i class="fas fa-arrow-up"></i></a></div><div class="navright navtitle">Chapter  3 .  Text inclusions</div></div><div class="infofooter"><span class="copyrightfooter">Copyright © 2023 Norman Walsh.</span></div><nav class="tocopen"></nav><nav class="toc"></nav><!-- Hide ToC details from user agents that don’t support JS --><script type="text/html" class="tocopen"><i class="far fa-book"></i></script><script type="text/html" class="toc"><header><span>Table of Contents</span><span class="close"><i class="far fa-window-close"></i></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%"/></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav></body></html>
+</p>
+
+<div id="xml-fragids---R_ch2_s1_variablelist1_varlistentry4_listitem1_formalgroup1" class="formalgroup formalobject"><header><div class="title">Example <span class="label">2<span class="sep">.</span>4</span><span class="sep">. </span>XML inclusion with fragment identifier and child sequence</div></header><div class="fgbody">
+
+<div id="xml-fragids---R_ch2_s1_variablelist1_varlistentry4_listitem1_formalgroup1_ex1" class="example formalobject">
+
+<div class="pre-wrap highlight"><pre class="language-xml programlisting verbatim verblines"><span class="line" db-line="1"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code><span class="cm">&lt;!-- Use xmlns() to set the namespace binding for the following expression --&gt;</span></code></span></span>
+<span class="line" db-line="2"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code><span class="nt">&lt;xi:include</span> <span class="na">href=</span><span class="s">"abstraction.xml"</span></code></span></span>
+<span class="line" db-line="3"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code>            <span class="na">fragid=</span><span class="s">"xmlns(db=http://docbook.org/ns/docbook)</span></code></span></span>
+<span class="line" db-line="4"><span class="ln">  <span class="nsep">|</span></span><span class="ld"><code><span class="s">                    xpath(/db:blockquote/db:attribution/db:personname)"</span><span class="nt">/&gt;</span></code></span></span>
+</pre></div>
+<header><div class="title">Subexample <span class="label">2<span class="sep">.</span>4<span class="sep">.</span>1</span><span class="sep">. </span>The XInclude</div></header></div>
+<div id="xml-fragids---R_ch2_s1_variablelist1_varlistentry4_listitem1_formalgroup1_ex2" class="example formalobject">
+
+
+<span class="first-last personname">Paul Hudak</span>
+<header><div class="title">Subexample <span class="label">2<span class="sep">.</span>4<span class="sep">.</span>2</span><span class="sep">. </span>What’s included</div></header></div>
+</div></div>
+
+
+</dd>
+</dl>
+</section>
+
+</section></main><nav class="bottom"><div class="navrow"><div class="navleft"><a title="Chapter  1 .  XInclude" href="ch01.html"><i class="fas fa-arrow-left"></i></a></div><div class="navmiddle"><a title="SInclude" href="index.html"><i class="fas fa-home"></i></a></div><div class="navright"><a title="Chapter  3 .  Text inclusions" href="ch03.html"><i class="fas fa-arrow-right"></i></a></div></div><div class="navrow"><div class="navleft navtitle">Chapter  1 .  XInclude</div><div class="navmiddle"><a title="SInclude" href="index.html"><i class="fas fa-arrow-up"></i></a></div><div class="navright navtitle">Chapter  3 .  Text inclusions</div></div><div class="infofooter"><span class="copyrightfooter">Copyright © 2023 Norman Walsh.</span></div><nav class="tocopen"></nav><nav class="toc"></nav><!-- Hide ToC details from user agents that don’t support JS --><script type="text/html" class="tocopen"><i class="far fa-book"></i></script><script type="text/html" class="toc"><header><span>Table of Contents</span><span class="close"><i class="far fa-window-close"></i></span><p class="ptoc-search"><input class="ptoc-search" placeholder="Search" style="width: 80%"/></p></header><div db-persistent-toc="persistent-toc.html" db-prefix="">Loading…</div></script></nav></body></html>

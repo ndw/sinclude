@@ -239,7 +239,6 @@ public class XInclude {
             String accept = node.getAttributeValue(_accept);
             String accept_lang = node.getAttributeValue(_accept_language);
             String parseAttr = node.getAttributeValue(_parse);
-            ParseType parse = ParseType.NOPARSE;
 
             if (href == null) {
                 href = "";
@@ -283,12 +282,14 @@ public class XInclude {
                 parseAttr = parseAttr.substring(0, parseAttr.indexOf(";")).trim();
             }
 
+            final ParseType parse;
             if ("xml".equals(parseAttr) || "application/xml".equals(parseAttr) || ("text/xml".equals(parseAttr) || parseAttr.endsWith("+xml"))) {
                 parse = ParseType.XMLPARSE;
             } else if ("text".equals(parseAttr) || parseAttr.startsWith("text/")) {
                 parse = ParseType.TEXTPARSE;
             } else {
-                // parse = ParseType.NOPARSE so fallback will be forced
+                // Unrecognized parse type; fallback will be forced
+                parse = ParseType.NOPARSE;
                 xptr = null;
                 fragid = null;
             }

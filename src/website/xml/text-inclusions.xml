@@ -202,7 +202,7 @@ and SInclude will tell you what it was expecting when the integrity check fails.
 <para>The <literal>search</literal> scheme has no official standard. I
 <link xlink:href="https://norman.walsh.name/2016/09/29/search">invented
 it</link> a few years ago. The idea is that instead of using explicit character
-or line references, as RFC 5147 does, allow the user to identifiy the lines
+or line references, as RFC 5147 does, allow the user to identify the lines
 by what they contain.</para>
 
 <para>Expressed in a lazy pseudo-BNF, it looks like this:</para>

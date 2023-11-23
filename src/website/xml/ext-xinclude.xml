@@ -18,7 +18,7 @@ when the DocBook extension functions are registered.</para></footnote>.</para>
 <para>To make the function available within Saxon, make sure that the
 SInclude jar file is on your class path and then use the Saxon <code>-init</code>
 option to register the function: <code>-init:com.nwalsh.xslt.Register</code>.
-(This step allows the extension function to workin Saxon-HE.)</para>
+(This step allows the extension function to work in Saxon-HE.)</para>
 
 <para>Call the function, for example in <code>xsl:sequence:</code></para>
 

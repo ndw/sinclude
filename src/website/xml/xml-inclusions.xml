@@ -21,7 +21,7 @@ can be used instead of <tag class="attribute">fragid</tag>.</para>
 
 <para>For the purposes of the examples that follow, let’s imagine a small XML document,
 <filename>abstraction.xml</filename>,
-one that I could include in it’s entirety with XInclude:</para>
+one that I could include in its entirety with XInclude:</para>
 
 <programlisting language="xml"
 ><xi:include href="abstraction.xml" parse="text"/>
@@ -51,7 +51,7 @@ Framework</link>.</para>
 <variablelist>
 <varlistentry><term><literal>id(some-id)</literal> and its shorthand syntax</term>
 <listitem>
-<para>The <literal>id</literal> scheme identifies an XML element by it’s ID. The
+<para>The <literal>id</literal> scheme identifies an XML element by its ID. The
 shorthand syntax for this common case is simply the value of the ID, <code>some-id</code>.
 </para>
 

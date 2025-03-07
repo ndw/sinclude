@@ -20,34 +20,26 @@ public class ReceiverUtils {
     private static Method characters;
     private static Method of;
 
-    public static XdmDestination makeDestination(XdmNode node) {
-        return makeDestination(nodeBaseURI(node));
-    }
-
-    public static XdmDestination makeDestination(URI baseURI) {
-        XdmDestination destination = new XdmDestination();
-        if (baseURI != null) {
-            destination.setBaseURI(baseURI);
-        }
-        return destination;
-    }
-
     public static Receiver makeReceiver(XdmNode node, XdmDestination destination) throws XPathException {
-        PipelineConfiguration pipe = node.getUnderlyingNode().getConfiguration().makePipelineConfiguration();
-        return makeReceiver(pipe, destination);
+        return makeReceiver(node, destination, node.getBaseURI());
     }
 
-    public static Receiver makeReceiver(PipelineConfiguration pipe, XdmDestination destination) throws XPathException {
+    public static Receiver makeReceiver(XdmNode node, XdmDestination destination, URI baseURI) throws XPathException {
+        PipelineConfiguration pipe = node.getUnderlyingNode().getConfiguration().makePipelineConfiguration();
+        return makeReceiver(pipe, destination, baseURI);
+    }
+
+    public static Receiver makeReceiver(PipelineConfiguration pipe, XdmDestination destination, URI baseURI) throws XPathException {
         Receiver receiver = destination.getReceiver(pipe, new SerializationProperties());
-        receiver.open();
-        if (destination.getBaseURI() != null) {
-            receiver.setSystemId(destination.getBaseURI().toASCIIString());
+        if (baseURI != null) {
+            receiver.setSystemId(baseURI.toString());
         }
+        receiver.open();
         return receiver;
     }
 
     public static XdmNode makeTextDocument(XdmNode node, String text) {
-        XdmDestination destination = ReceiverUtils.makeDestination(node);
+        XdmDestination destination = new XdmDestination();
         try {
             Receiver receiver = ReceiverUtils.makeReceiver(node, destination);
             receiver.startDocument(0);

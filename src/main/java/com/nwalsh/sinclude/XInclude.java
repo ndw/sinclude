@@ -29,16 +29,7 @@ import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.om.FingerprintedQName;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.NodeName;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.DocumentBuilder;
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.Serializer;
-import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.s9api.*;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.BuiltInAtomicType;
 
@@ -469,10 +460,10 @@ public class XInclude {
                         }
                     }
 
-                    XdmDestination destination = ReceiverUtils.makeDestination(doc);
+                    XdmDestination destination = new XdmDestination();
                     Receiver receiver = ReceiverUtils.makeReceiver(doc, destination);
                     for (int pos = 0; pos < lines.length; pos++) {
-                        if (lines[pos].length() > 0) {
+                        if (!lines[pos].isEmpty()) {
                             int first = 0;
                             while (first < trimleading && first < lines[pos].length() && lines[pos].charAt(first) == ' ') {
                                 first++;
@@ -513,7 +504,7 @@ public class XInclude {
             String contextBaseURI = NodeUtils.getLang(xinclude.getParent());
 
             try {
-                XdmDestination destination = ReceiverUtils.makeDestination(document);
+                XdmDestination destination = new XdmDestination();
                 Receiver receiver = ReceiverUtils.makeReceiver(document, destination);
                 receiver.startDocument(0);
 
@@ -615,7 +606,7 @@ public class XInclude {
             XdmSequenceIterator<XdmNode> iter = fallback.axisIterator(Axis.CHILD);
 
             try {
-                XdmDestination destination = ReceiverUtils.makeDestination(fallback);
+                XdmDestination destination = new XdmDestination();
                 Receiver receiver = ReceiverUtils.makeReceiver(fallback, destination);
                 receiver.startDocument(0);
                 while (iter.hasNext()) {
@@ -661,7 +652,7 @@ public class XInclude {
         }
 
         public XdmNode walk(XdmNode node) throws XPathException {
-            XdmDestination destination = ReceiverUtils.makeDestination(node);
+            XdmDestination destination = new XdmDestination();
             Receiver receiver = ReceiverUtils.makeReceiver(node, destination);
             receiver.startDocument(0);
             traverse(receiver, node);
@@ -685,7 +676,9 @@ public class XInclude {
                 }
             } else if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
                 if (handlers.containsKey(node.getNodeName())) {
-                    receiver.append(handlers.get(node.getNodeName()).process(node).getUnderlyingNode());
+                    XdmNode handled = handlers.get(node.getNodeName()).process(node);
+                    Location loc = new IncludeLocation(handled.getBaseURI().toString(), handled.getLineNumber(), handled.getColumnNumber());
+                    receiver.append(handled.getUnderlyingNode(), loc, ReceiverOption.ALL_NAMESPACES);
                 } else {
                     NodeInfo inode = node.getUnderlyingNode();
                     FingerprintedQName name = NamespaceUtils.fqName(inode.getPrefix(), inode.getURI(), inode.getLocalPart());
@@ -715,6 +708,43 @@ public class XInclude {
             } else {
                 receiver.append(node.getUnderlyingNode());
             }
+        }
+    }
+
+    private static class IncludeLocation implements Location {
+        private final String systemId;
+        private final int lineNumber;
+        private final int columnNumber;
+
+        IncludeLocation(String systemId, int lineNumber, int columnNumber) {
+            this.systemId = systemId;
+            this.lineNumber = lineNumber;
+            this.columnNumber = columnNumber;
+        }
+
+        @Override
+        public String getSystemId() {
+            return systemId;
+        }
+
+        @Override
+        public String getPublicId() {
+            return "";
+        }
+
+        @Override
+        public int getLineNumber() {
+            return lineNumber;
+        }
+
+        @Override
+        public int getColumnNumber() {
+            return columnNumber;
+        }
+
+        @Override
+        public Location saveLocation() {
+            return new IncludeLocation(systemId, lineNumber, columnNumber);
         }
     }
 }

@@ -52,7 +52,7 @@ public abstract class AbstractXmlScheme {
         }
 
         try {
-            XdmDestination destination = ReceiverUtils.makeDestination(node);
+            XdmDestination destination = new XdmDestination();
             Receiver receiver = ReceiverUtils.makeReceiver(node, destination);
             receiver.startDocument(0);
 

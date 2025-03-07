@@ -43,9 +43,9 @@ public class Main {
 
         XdmNode newdoc = null;
         try {
-            XdmDestination destination = ReceiverUtils.makeDestination(URI.create("http://example.com/receiver"));
+            XdmDestination destination = new XdmDestination();
             PipelineConfiguration pipe = processor.getUnderlyingConfiguration().makePipelineConfiguration();
-            Receiver receiver = ReceiverUtils.makeReceiver(pipe, destination);
+            Receiver receiver = ReceiverUtils.makeReceiver(pipe, destination, URI.create("http://example.com/receiver"));
 
             receiver.startDocument(0);
 

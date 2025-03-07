@@ -1,0 +1,19 @@
+<appendix xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi='http://www.w3.org/2001/XInclude'
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="changelog"
+         version="5.2">
+<title>Change log</title>
+
+<variablelist>
+<varlistentry><term>Version 5.3.0, 7 March 2025</term>
+<listitem>
+<para>This release fixes a problem where the base URI of included elements was not
+recorded correctly. There is now a unit test to make sure that the base URI of an included
+element is the base URI of the included resource, not of the including resource.
+</para>
+</listitem>
+</varlistentry>
+</variablelist>
+ 
+</appendix>

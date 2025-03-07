@@ -8,7 +8,7 @@
 <author>
   <personname>Norm Tovey-Walsh</personname>
 </author>
-<copyright><year>2023</year><holder>Norm Tovey-Walsh</holder></copyright>
+<copyright><year>2023</year><year>2024</year><year>2025</year><holder>Norm Tovey-Walsh</holder></copyright>
 <productname>SInclude</productname>
 <productnumber><?sinclude-version?></productnumber>
 </info>
@@ -20,5 +20,6 @@
 <xi:include href="ext-xinclude.xml"/>
 <xi:include href="p-xinclude.xml"/>
 <xi:include href="java-api.xml"/>
+<xi:include href="changelog.xml"/>
 
 </book>

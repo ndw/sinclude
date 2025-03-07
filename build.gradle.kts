@@ -121,17 +121,17 @@ val sourcesJar = tasks.register<Jar>("sourcesJar") {
 tasks.register<Copy>("distCopyJar") {
   dependsOn("jar")
   from(tasks.jar)
-  into(project.layout.buildDirectory.dir("${basename}-${sincludeVersion}/lib"))
+  into(layout.buildDirectory.dir("${basename}-${sincludeVersion}/lib"))
 }
 
 tasks.register<Copy>("distCopyReadme") {
   from("README.org")
-  into(project.layout.buildDirectory.dir("${basename}-${sincludeVersion}"))
+  into(layout.buildDirectory.dir("${basename}-${sincludeVersion}"))
 }
 
 tasks.register<Zip>("zipDist") {
   dependsOn("distCopyReadme", "distCopyJar")
-  from(project.layout.buildDirectory.dir("${basename}-${sincludeVersion}"))
+  from(layout.buildDirectory.dir("${basename}-${sincludeVersion}"))
   into("${basename}-${sincludeVersion}")
   archiveFileName = "${basename}-${sincludeVersion}.zip"
 }
@@ -146,7 +146,7 @@ tasks.register("dist") {
 // ============================================================
 
 tasks.register("copyJarResources") {
-  outputs.dir(project.layout.buildDirectory.dir("website"))
+  outputs.dir(layout.buildDirectory.dir("website"))
 
   val dbjar = configurations.named("transform").get().getFiles()
       .filter { jar -> jar.toString().contains("docbook-xslTNG") }
@@ -168,7 +168,7 @@ tasks.register("copyJarResources") {
   }
 
   doLast {
-    delete(project.layout.buildDirectory.dir("website/org"))
+    delete(layout.buildDirectory.dir("website/org"))
   }
 }
 

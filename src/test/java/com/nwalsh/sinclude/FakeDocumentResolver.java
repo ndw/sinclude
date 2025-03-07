@@ -371,8 +371,8 @@ public class FakeDocumentResolver implements DocumentResolver {
 
         if (text != null) {
             try {
-                XdmDestination destination = ReceiverUtils.makeDestination(baseURI);
-                Receiver receiver = ReceiverUtils.makeReceiver(base, destination);
+                XdmDestination destination = new XdmDestination();
+                Receiver receiver = ReceiverUtils.makeReceiver(base, destination, baseURI);
                 receiver.startDocument(0);
                 ReceiverUtils.handleCharacters(receiver, text);
                 receiver.endDocument();

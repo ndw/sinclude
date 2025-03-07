@@ -50,9 +50,9 @@ public class SchemeTextTest extends TestCase {
                 + "This is line twenty.\n";
 
         try {
-            XdmDestination destination = ReceiverUtils.makeDestination(URI.create("http://example.com/test.txt"));
+            XdmDestination destination = new XdmDestination();
             PipelineConfiguration pipe = processor.getUnderlyingConfiguration().makePipelineConfiguration();
-            Receiver receiver = ReceiverUtils.makeReceiver(pipe, destination);
+            Receiver receiver = ReceiverUtils.makeReceiver(pipe, destination, URI.create("http://example.com/test.txt"));
             receiver.startDocument(0);
             ReceiverUtils.handleCharacters(receiver, doc);
             receiver.endDocument();

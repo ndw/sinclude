@@ -94,8 +94,8 @@ public class XPathScheme extends AbstractXmlScheme implements XmlScheme {
                 baseURI = ReceiverUtils.nodeBaseURI(document);
             }
 
-            XdmDestination destination = ReceiverUtils.makeDestination(baseURI);
-            Receiver receiver = ReceiverUtils.makeReceiver(document, destination);
+            XdmDestination destination = new XdmDestination();
+            Receiver receiver = ReceiverUtils.makeReceiver(document, destination, baseURI);
             receiver.startDocument(0);
             for (XdmNode node : results) {
                 Location loc = new Loc(node.getBaseURI().toASCIIString(), -1, -1);

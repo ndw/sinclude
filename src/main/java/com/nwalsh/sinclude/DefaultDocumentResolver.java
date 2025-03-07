@@ -6,7 +6,6 @@ import com.nwalsh.sinclude.exceptions.XIncludeIOException;
 import com.nwalsh.sinclude.utils.ReceiverUtils;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.Receiver;
-import net.sf.saxon.expr.parser.Loc;
 import net.sf.saxon.lib.UnparsedTextURIResolver;
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.trans.XPathException;
@@ -124,9 +123,9 @@ public class DefaultDocumentResolver implements DocumentResolver {
                 }
             }
 
-            XdmDestination destination = ReceiverUtils.makeDestination(baseURI);
+            XdmDestination destination = new XdmDestination();
             try {
-                Receiver receiver = ReceiverUtils.makeReceiver(base, destination);
+                Receiver receiver = ReceiverUtils.makeReceiver(base, destination, baseURI);
                 receiver.startDocument(0);
                 ReceiverUtils.handleCharacters(receiver, text.toString());
                 receiver.endDocument();
@@ -147,9 +146,9 @@ public class DefaultDocumentResolver implements DocumentResolver {
             return resolveText(base, baseURI.toASCIIString(), encoding, accept, acceptLanguage);
         }
 
-        XdmDestination destination = ReceiverUtils.makeDestination((URI) null);
+        XdmDestination destination = new XdmDestination();
         try {
-            Receiver receiver = ReceiverUtils.makeReceiver(base, destination);
+            Receiver receiver = ReceiverUtils.makeReceiver(base, destination, null);
             receiver.startDocument(0);
             ReceiverUtils.handleCharacters(receiver, base.toString());
             receiver.endDocument();

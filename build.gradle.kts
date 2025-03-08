@@ -106,7 +106,13 @@ tasks.jar {
   }
 }
 
-tasks.register<Jar>("javadocJar") {
+tasks.javadoc {
+  if (JavaVersion.current().isJava9Compatible) {
+    (options as StandardJavadocDocletOptions).addBooleanOption("html5", true)
+  }
+}
+
+val javadocJar = tasks.register<Jar>("javadocJar") {
   dependsOn("javadoc")
   archiveClassifier = "javadoc"
   from(tasks.javadoc)
@@ -255,6 +261,12 @@ publishing {
 
       from(components["java"])
       artifact(sourcesJar.get())
+      artifact(javadocJar.get())
     }
   }
 }
+
+signing {
+  sign(publishing.publications["mavenSInclude"])
+}
+

@@ -1,0 +1,5 @@
+<three xmlns:xi="http://www.w3.org/2001/XInclude"
+       xi_magic:xyz="abc"
+       xmlns:xi_magic="http://example.com/">
+  <xi:include href="two.xml"/>
+</three>

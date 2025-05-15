@@ -1,0 +1,4 @@
+<document xmlns:xi="http://www.w3.org/2001/XInclude">
+  <p>This is the top level.</p>
+  <xi:include href="three.xml"/>
+</document>

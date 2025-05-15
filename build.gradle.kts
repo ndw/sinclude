@@ -1,3 +1,6 @@
+import com.nwalsh.gradle.saxon.SaxonXsltTask
+import com.nwalsh.gradle.relaxng.validate.RelaxNGValidateTask
+
 buildscript {
   repositories {
     mavenLocal()
@@ -34,9 +37,6 @@ plugins {
   id("com.nwalsh.gradle.saxon.saxon-gradle") version "0.10.4"
   id("com.nwalsh.gradle.relaxng.validate") version "0.10.3"
 }
-
-import com.nwalsh.gradle.saxon.SaxonXsltTask
-import com.nwalsh.gradle.relaxng.validate.RelaxNGValidateTask
 
 val saxonVersion = project.properties["saxonVersion"].toString()
 val sincludeVersion = project.properties["sincludeVersion"].toString()

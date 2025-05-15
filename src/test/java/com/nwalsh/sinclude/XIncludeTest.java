@@ -4,10 +4,7 @@ import com.nwalsh.sinclude.exceptions.XIncludeIntegrityCheckException;
 import com.nwalsh.sinclude.exceptions.XIncludeLoopException;
 import com.nwalsh.sinclude.exceptions.XIncludeNoFragmentException;
 import junit.framework.TestCase;
-import net.sf.saxon.s9api.DocumentBuilder;
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.*;
 import net.sf.saxon.trans.XPathException;
 import org.xml.sax.InputSource;
 
@@ -367,6 +364,51 @@ public class XIncludeTest extends TestCase {
             assertNotNull(resolved);
         } catch (Exception e) {
             fail();
+        }
+    }
+
+    public void testDeeplyNestedIncludeTest() {
+        XInclude include = new XInclude();
+
+        try {
+            DocumentBuilder builder = processor.newDocumentBuilder();
+            XdmNode doc = builder.build(new File("src/test/resources/four.xml"));
+            include.setFixupXmlBase(false);
+            XdmNode resolved = include.expandXIncludes(doc);
+            testBase(resolved);
+
+            include = new XInclude();
+            include.setFixupXmlBase(true);
+            resolved = include.expandXIncludes(doc);
+            testBase(resolved);
+
+        } catch (Exception e) {
+            fail();
+        }
+    }
+
+    private void testBase(XdmNode node) {
+        if (node.getNodeKind() == XdmNodeKind.DOCUMENT) {
+            for (XdmNode child : node.children()) {
+                testBase(child);
+            }
+        }
+
+        if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
+            if ("document".equals(node.getNodeName().getLocalName()) || "p".equals(node.getNodeName().getLocalName())) {
+                assertTrue(node.getBaseURI().toString().endsWith("/four.xml"));
+            } else if ("three".equals(node.getNodeName().getLocalName())) {
+                assertTrue(node.getBaseURI().toString().endsWith("/three.xml"));
+            } else if ("two".equals(node.getNodeName().getLocalName())) {
+                assertTrue(node.getBaseURI().toString().endsWith("/two.xml"));
+            } else if ("one".equals(node.getNodeName().getLocalName())) {
+                assertTrue(node.getBaseURI().toString().endsWith("/one.xml"));
+            } else {
+                fail();
+            }
+            for (XdmNode child : node.children()) {
+                testBase(child);
+            }
         }
     }
 

@@ -23,23 +23,14 @@ import com.nwalsh.sinclude.xpointer.SelectionResult;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.event.ReceiverOption;
 import net.sf.saxon.expr.parser.Loc;
-import net.sf.saxon.om.AttributeInfo;
-import net.sf.saxon.om.AttributeMap;
-import net.sf.saxon.om.EmptyAttributeMap;
-import net.sf.saxon.om.FingerprintedQName;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.NodeName;
+import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.BuiltInAtomicType;
 
 import java.io.File;
 import java.net.URI;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Stack;
-import java.util.Vector;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,10 +40,12 @@ import static com.nwalsh.sinclude.utils.NodeUtils.xml_lang;
 
 public class XInclude {
     private static final URI MAGIC_IMPOSSIBLE_URI = URI.create("https://nwalsh.com/fake/uri/for/text/include.txt");
+    private static final String MAGIC_ID_URI = "https://nwalsh.com/ns/xinclude/id";
     private static final String NS_XML = "http://www.w3.org/XML/1998/namespace";
     private static final String NS_XINCLUDE = "http://www.w3.org/2001/XInclude";
     private static final QName xi_include = new QName(NS_XINCLUDE, "include");
     private static final QName xi_fallback = new QName(NS_XINCLUDE, "fallback");
+    private static final QName magic_id = new QName(MAGIC_ID_URI, "magic:id");
 
     private static final String localAttrNS = "http://www.w3.org/2001/XInclude/local-attributes";
 
@@ -72,6 +65,7 @@ public class XInclude {
     private static final FingerprintedQName fq_xml_id = NamespaceUtils.fqName(xml_id);
     private static final FingerprintedQName fq_xml_lang = NamespaceUtils.fqName(xml_lang);
     private static final FingerprintedQName fq_xml_base = NamespaceUtils.fqName(xml_base);
+    private static final FingerprintedQName fq_magic_id = NamespaceUtils.fqName(magic_id);
 
     private DebuggingLogger logger = null;
     private boolean trimText = false;
@@ -83,6 +77,8 @@ public class XInclude {
     private DocumentResolver resolver = null;
     private FragmentIdParser fragmentIdParser = null;
     private final Stack<URI> uriStack = new Stack<>();
+    private MagicId magicId = new MagicId();
+    private Map<String, Location> magicBaseUriMap = new HashMap<>();
 
     public XInclude() {
         resolver = new DefaultDocumentResolver();
@@ -110,7 +106,7 @@ public class XInclude {
         registerScheme(new SearchScheme());
     }
 
-    public XInclude newInstance() {
+    private XInclude newInstance() {
         XInclude include = new XInclude();
         include.logger = logger;
         include.resolver = resolver;
@@ -122,6 +118,8 @@ public class XInclude {
         include.copyAttributes = copyAttributes;
         include.trimText = trimText;
         include.uriStack.addAll(uriStack);
+        include.magicId = magicId;
+        include.magicBaseUriMap = magicBaseUriMap;
         return include;
     }
 
@@ -180,30 +178,91 @@ public class XInclude {
 
     public XdmNode expandXIncludes(XdmNode node) throws XPathException {
         logger = new DebuggingLogger(node.getUnderlyingNode().getConfiguration().getLogger());
-        TreeWalker walker = new TreeWalker();
-        walker.register(xi_include, new XiIncludeHandler(this));
-        walker.register(xi_fallback, new XiFallbackHandler());
-        return walker.walk(node);
+        XdmNode result = internalExpandXIncludes(node);
+        result = remapBaseUris(result);
+        return result;
     }
 
     public void expandXIncludes(File input, File output) throws SaxonApiException, XPathException {
         Processor processor = new Processor(false);
         DocumentBuilder builder = processor.newDocumentBuilder();
         XdmNode node = builder.build(input);
-        logger = new DebuggingLogger(node.getUnderlyingNode().getConfiguration().getLogger());
 
-        TreeWalker walker = new TreeWalker();
-        walker.setXmlBase(input.toURI());
-        walker.register(xi_include, new XiIncludeHandler(this));
-        walker.register(xi_fallback, new XiFallbackHandler());
-
-        XdmNode result = walker.walk(node);
+        XdmNode result = internalExpandXIncludes(node);
+        result = remapBaseUris(result);
 
         Serializer serializer = processor.newSerializer(output);
         serializer.setOutputProperty(Serializer.Property.METHOD, "xml");
         serializer.setOutputProperty(Serializer.Property.INDENT, "no");
-        serializer.serializeNode(walker.walk(result));
+        serializer.serializeNode(result);
         serializer.close();
+    }
+
+    public XdmNode internalExpandXIncludes(XdmNode node) throws XPathException {
+        logger = new DebuggingLogger(node.getUnderlyingNode().getConfiguration().getLogger());
+        TreeWalker walker = new TreeWalker();
+        walker.register(xi_include, new XiIncludeHandler(this));
+        walker.register(xi_fallback, new XiFallbackHandler());
+        XdmNode result = walker.walk(node);
+        return result;
+    }
+
+    private XdmNode remapBaseUris(XdmNode node) throws XPathException {
+        if (fixupXmlBase) {
+            return node;
+        }
+
+        XdmDestination destination = new XdmDestination();
+        Receiver receiver = ReceiverUtils.makeReceiver(node, destination);
+        receiver.startDocument(0);
+        remapTraversal(receiver, node);
+        receiver.endDocument();
+        receiver.close();
+        return destination.getXdmNode();
+    }
+
+    private void remapTraversal(Receiver receiver, XdmNode node) throws XPathException {
+        XdmSequenceIterator<XdmNode> iter = null;
+
+        if (node.getNodeKind() == XdmNodeKind.DOCUMENT) {
+            iter = node.axisIterator(Axis.CHILD);
+            while (iter.hasNext()) {
+                XdmNode item = iter.next();
+                if (item.getNodeKind() == XdmNodeKind.ELEMENT) {
+                    remapTraversal(receiver, item);
+                } else {
+                    receiver.append(item.getUnderlyingNode());
+                }
+            }
+        } else if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
+            String id = node.getAttributeValue(magic_id);
+            Location loc = node.getUnderlyingNode().saveLocation();
+            if (magicBaseUriMap.containsKey(id)) {
+                loc = magicBaseUriMap.get(id);
+            }
+
+            NodeInfo inode = node.getUnderlyingNode();
+            FingerprintedQName name = NamespaceUtils.fqName(inode.getPrefix(), inode.getURI(), inode.getLocalPart());
+
+            AttributeMap amap = inode.attributes();
+            amap = amap.remove(fq_magic_id);
+
+            NamespaceMap nmap =  NamespaceUtils.removeNamespace(inode.getAllNamespaces(), MAGIC_ID_URI);
+
+            receiver.startElement(name, inode.getSchemaType(), amap, nmap, loc, 0);
+            iter = node.axisIterator(Axis.CHILD);
+            while (iter.hasNext()) {
+                XdmNode item = iter.next();
+                if (item.getNodeKind() == XdmNodeKind.ELEMENT) {
+                    remapTraversal(receiver, item);
+                } else {
+                    receiver.append(item.getUnderlyingNode());
+                }
+            }
+            receiver.endElement();
+        } else {
+            receiver.append(node.getUnderlyingNode());
+        }
     }
 
     private interface ElementHandler {
@@ -370,7 +429,7 @@ public class XInclude {
                     }
                 } else {
                     doc = fixup(node, doc, setId);
-                    doc = nested.expandXIncludes(doc);
+                    doc = nested.internalExpandXIncludes(doc);
                     uriStack.pop();
                 }
 
@@ -421,7 +480,7 @@ public class XInclude {
                         throw new XIncludeNoFragmentException("Failed to locate fragment: " + xptr);
                     }
                     doc = fixup(node, doc, setId);
-                    doc = nested.expandXIncludes(doc);
+                    doc = nested.internalExpandXIncludes(doc);
                 }
             } catch (Exception e) {
                 if (fallback != null) {
@@ -429,7 +488,7 @@ public class XInclude {
 
                     XInclude nested = xinclude.newInstance();
                     doc = fixup(node, doc, setId);
-                    doc = nested.expandXIncludes(doc);
+                    doc = nested.internalExpandXIncludes(doc);
 
                 } else {
                     throw e;
@@ -658,7 +717,8 @@ public class XInclude {
             traverse(receiver, node);
             receiver.endDocument();
             receiver.close();
-            return destination.getXdmNode();
+            XdmNode result = destination.getXdmNode();
+            return result;
         }
 
         private void traverse(Receiver receiver, XdmNode node) throws XPathException {
@@ -678,12 +738,21 @@ public class XInclude {
                 if (handlers.containsKey(node.getNodeName())) {
                     XdmNode handled = handlers.get(node.getNodeName()).process(node);
                     Location loc = new IncludeLocation(handled.getBaseURI().toString(), handled.getLineNumber(), handled.getColumnNumber());
+                    if (!fixupXmlBase) {
+                        for (XdmNode child : handled.children()) {
+                            if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
+                                String id = child.getAttributeValue(magic_id);
+                                magicBaseUriMap.put(id, loc);
+                            }
+                        }
+                    }
                     receiver.append(handled.getUnderlyingNode(), loc, ReceiverOption.ALL_NAMESPACES);
                 } else {
+                    root = false;
                     NodeInfo inode = node.getUnderlyingNode();
                     FingerprintedQName name = NamespaceUtils.fqName(inode.getPrefix(), inode.getURI(), inode.getLocalPart());
 
-                    final AttributeMap amap;
+                    AttributeMap amap;
                     if (root && fixupXmlBase && overrideBaseURI != null && inode.getAttributeValue(NS_XML, "base") == null) {
                         FingerprintedQName xml_base = NamespaceUtils.fqName("xml", NS_XML, "base");
                         AttributeInfo base = new AttributeInfo(xml_base, BuiltInAtomicType.ANY_URI, overrideBaseURI.toString(), inode.saveLocation(), 0);
@@ -691,9 +760,33 @@ public class XInclude {
                     } else {
                         amap = inode.attributes();
                     }
-                    root = false;
 
-                    receiver.startElement(name, inode.getSchemaType(), amap, inode.getAllNamespaces(), inode.saveLocation(), 0);
+                    NamespaceMap nmap = inode.getAllNamespaces();
+
+                    if (!fixupXmlBase) {
+                        String mprefix = "xi_magic";
+                        int mcount = 1;
+                        boolean found = true;
+                        while (found) {
+                            found = false;
+                            for (String prefix : nmap.getPrefixArray()) {
+                                if (mprefix.equals(prefix)) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (found) {
+                                mprefix = "xi_magic_" + mcount++;
+                            }
+                        }
+
+                        String nextId = String.valueOf(magicId.nextId());
+                        FingerprintedQName element_id = NamespaceUtils.fqName(mprefix, MAGIC_ID_URI, "id");
+                        amap = amap.put(new AttributeInfo(element_id, BuiltInAtomicType.UNTYPED_ATOMIC, nextId, inode.saveLocation(), 0));
+                        nmap = NamespaceUtils.addNamespace(nmap, element_id.getPrefix(), MAGIC_ID_URI);
+                    }
+
+                    receiver.startElement(name, inode.getSchemaType(), amap, nmap, inode.saveLocation(), 0);
                     iter = node.axisIterator(Axis.CHILD);
                     while (iter.hasNext()) {
                         XdmNode item = iter.next();
@@ -745,6 +838,13 @@ public class XInclude {
         @Override
         public Location saveLocation() {
             return new IncludeLocation(systemId, lineNumber, columnNumber);
+        }
+    }
+
+    private static class MagicId {
+        private int id = 0;
+        public int nextId() {
+            return id++;
         }
     }
 }

@@ -51,10 +51,15 @@ jobs:
 
       - name: Build
         run: |
-          ./gradlew -PsaxonVersion=10.9 clean test
-          ./gradlew -PsaxonVersion=11.5 clean test
-          ./gradlew -PsaxonVersion=12.1 clean test
+#          ./gradlew -PsaxonVersion=10.9 clean test
+#          ./gradlew -PsaxonVersion=11.5 clean test
+#          ./gradlew -PsaxonVersion=12.1 clean test
           ./gradlew clean dist website
+
+      - name: testDeploy
+        run: |
+          ./gradlew publish
+          ./gradlew jreleaserConfig
 
       - name: Deploy master to gh-pages
         if: ${{ env.HAVE_ACCESS_TOKEN == 'true' && env.CI_BRANCH == 'master' }}

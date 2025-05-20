@@ -50,6 +50,7 @@ jobs:
       JRELEASER_DEPLOY_MAVEN_MAVENCENTRAL_SONATYPE_PASSWORD: ${{ secrets.SONATYPEPASS }}
       JRELEASER_GPG_SECRET_KEY: ${{ secrets.GPG_PRIVATE }}
       JRELEASER_GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC }}
+      JRELEASER_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
     steps:
       - name: Checkout the branch
         uses: actions/checkout@v3

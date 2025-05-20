@@ -1,1 +1,8 @@
-<one/>
+<one>
+  <zero/>
+  <base1 xml:base="http://example.com/path/to/thing">
+    <nested-base1/>
+    <nested-base2 xml:base="spoon/fork"/>
+  </base1>
+  <zero/>
+</one>

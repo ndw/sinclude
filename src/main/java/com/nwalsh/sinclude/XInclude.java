@@ -215,13 +215,13 @@ public class XInclude {
         XdmDestination destination = new XdmDestination();
         Receiver receiver = ReceiverUtils.makeReceiver(node, destination);
         receiver.startDocument(0);
-        remapTraversal(receiver, node);
+        remapTraversal(receiver, node, new XInclude.IncludeLocation(node));
         receiver.endDocument();
         receiver.close();
         return destination.getXdmNode();
     }
 
-    private void remapTraversal(Receiver receiver, XdmNode node) throws XPathException {
+    private void remapTraversal(Receiver receiver, XdmNode node, Location location) throws XPathException {
         XdmSequenceIterator<XdmNode> iter = null;
 
         if (node.getNodeKind() == XdmNodeKind.DOCUMENT) {
@@ -229,16 +229,21 @@ public class XInclude {
             while (iter.hasNext()) {
                 XdmNode item = iter.next();
                 if (item.getNodeKind() == XdmNodeKind.ELEMENT) {
-                    remapTraversal(receiver, item);
+                    remapTraversal(receiver, item, location);
                 } else {
                     receiver.append(item.getUnderlyingNode());
                 }
             }
         } else if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
             String id = node.getAttributeValue(magic_id);
-            Location loc = node.getUnderlyingNode().saveLocation();
-            if (magicBaseUriMap.containsKey(id)) {
+            Location loc;
+
+            if (node.getAttributeValue(xml_base) != null) {
+                loc = new XInclude.IncludeLocation(node, node.getBaseURI().toString());
+            } else if (magicBaseUriMap.containsKey(id)) {
                 loc = magicBaseUriMap.get(id);
+            } else {
+                loc = new XInclude.IncludeLocation(node, location.getSystemId());
             }
 
             NodeInfo inode = node.getUnderlyingNode();
@@ -254,7 +259,7 @@ public class XInclude {
             while (iter.hasNext()) {
                 XdmNode item = iter.next();
                 if (item.getNodeKind() == XdmNodeKind.ELEMENT) {
-                    remapTraversal(receiver, item);
+                    remapTraversal(receiver, item, loc);
                 } else {
                     receiver.append(item.getUnderlyingNode());
                 }
@@ -389,7 +394,7 @@ public class XInclude {
             HashSet<XdmNode> ancestors = null;
             XdmNode doc = null;
             try {
-                if ("".equals(href)) {
+                if (href.isEmpty()) {
                     if (logger != null) {
                         logger.debug(DebuggingLogger.XINCLUDE, "XInclude same document");
                     }
@@ -423,7 +428,7 @@ public class XInclude {
                 }
 
                 XInclude nested = xinclude.newInstance();
-                if ("".equals(href)) {
+                if (href.isEmpty()) {
                     if (xptr == null && parse == ParseType.XMLPARSE) {
                         throw new XIncludeLoopException("Recursive same document reference");
                     }
@@ -448,7 +453,7 @@ public class XInclude {
                                 data.toArray(array);
                                 SelectionResult result = pointer.select(array, doc);
 
-                                if ("".equals(href)) {
+                                if (href.isEmpty()) {
                                     for (XdmNode selected : result.getSelectedNodes()) {
                                         if (ancestors.contains(selected)) {
                                             throw new XIncludeLoopException("XInclude same-document reference to ancestor forms a loop");
@@ -505,7 +510,7 @@ public class XInclude {
                     int trimleading = -1;
                     for (String line : lines) {
                         // (Effectively) blank lines don't count
-                        if (!"".equals(line.trim())) {
+                        if (!line.trim().isEmpty()) {
                             int leading = 0;
                             while (leading < line.length() && line.charAt(leading) == ' ') {
                                 leading++;
@@ -582,7 +587,7 @@ public class XInclude {
                             // provides a value for it. (The value "" removes the xml:id.)
                             if (setId != null) {
                                 copied.add(fq_xml_id);
-                                if (!"".equals(setId)) {
+                                if (!setId.isEmpty()) {
                                     // If we have an EE processor, this should probably be of type ID.
                                     amap = amap.put(new AttributeInfo(fq_xml_id, BuiltInAtomicType.UNTYPED_ATOMIC, setId, null, ReceiverOption.NONE));
                                 }
@@ -591,7 +596,7 @@ public class XInclude {
                             for (AttributeInfo ainfo : xinclude.getUnderlyingNode().attributes()) {
                                 // Attribute must be in a namespace
                                 String nsuri = ainfo.getNodeName().getURI();
-                                boolean copy = (nsuri != null && !"".equals(nsuri));
+                                boolean copy = (nsuri != null && !nsuri.isEmpty());
 
                                 // But not in the XML namespace
                                 copy = copy && !NS_XML.equals(nsuri);
@@ -673,7 +678,7 @@ public class XInclude {
                     if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
                         data.clear();
                         TreeWalker walker = new TreeWalker();
-                        walker.traverse(receiver, node);
+                        walker.traverse(receiver, node, true);
                     } else {
                         receiver.append(node.getUnderlyingNode());
                     }
@@ -714,14 +719,14 @@ public class XInclude {
             XdmDestination destination = new XdmDestination();
             Receiver receiver = ReceiverUtils.makeReceiver(node, destination);
             receiver.startDocument(0);
-            traverse(receiver, node);
+            traverse(receiver, node, true);
             receiver.endDocument();
             receiver.close();
             XdmNode result = destination.getXdmNode();
             return result;
         }
 
-        private void traverse(Receiver receiver, XdmNode node) throws XPathException {
+        private void traverse(Receiver receiver, XdmNode node, boolean addMagicId) throws XPathException {
             XdmSequenceIterator<XdmNode> iter = null;
 
             if (node.getNodeKind() == XdmNodeKind.DOCUMENT) {
@@ -729,7 +734,7 @@ public class XInclude {
                 while (iter.hasNext()) {
                     XdmNode item = iter.next();
                     if (item.getNodeKind() == XdmNodeKind.ELEMENT) {
-                        traverse(receiver, item);
+                        traverse(receiver, item, addMagicId);
                     } else {
                         receiver.append(item.getUnderlyingNode());
                     }
@@ -780,10 +785,12 @@ public class XInclude {
                             }
                         }
 
-                        String nextId = String.valueOf(magicId.nextId());
-                        FingerprintedQName element_id = NamespaceUtils.fqName(mprefix, MAGIC_ID_URI, "id");
-                        amap = amap.put(new AttributeInfo(element_id, BuiltInAtomicType.UNTYPED_ATOMIC, nextId, inode.saveLocation(), 0));
-                        nmap = NamespaceUtils.addNamespace(nmap, element_id.getPrefix(), MAGIC_ID_URI);
+                        if (addMagicId) {
+                            String nextId = String.valueOf(magicId.nextId());
+                            FingerprintedQName element_id = NamespaceUtils.fqName(mprefix, MAGIC_ID_URI, "id");
+                            amap = amap.put(new AttributeInfo(element_id, BuiltInAtomicType.UNTYPED_ATOMIC, nextId, inode.saveLocation(), 0));
+                            nmap = NamespaceUtils.addNamespace(nmap, element_id.getPrefix(), MAGIC_ID_URI);
+                        }
                     }
 
                     receiver.startElement(name, inode.getSchemaType(), amap, nmap, inode.saveLocation(), 0);
@@ -791,7 +798,7 @@ public class XInclude {
                     while (iter.hasNext()) {
                         XdmNode item = iter.next();
                         if (item.getNodeKind() == XdmNodeKind.ELEMENT) {
-                            traverse(receiver, item);
+                            traverse(receiver, item, false);
                         } else {
                             receiver.append(item.getUnderlyingNode());
                         }
@@ -813,6 +820,24 @@ public class XInclude {
             this.systemId = systemId;
             this.lineNumber = lineNumber;
             this.columnNumber = columnNumber;
+        }
+
+        IncludeLocation(XdmNode node) {
+            systemId = node.getUnderlyingNode().getSystemId();
+            lineNumber = node.getUnderlyingNode().getLineNumber();
+            columnNumber = node.getUnderlyingNode().getColumnNumber();
+        }
+
+        IncludeLocation(XdmNode node, String overrideSystemId) {
+            systemId = overrideSystemId;
+            lineNumber = node.getUnderlyingNode().getLineNumber();
+            columnNumber = node.getUnderlyingNode().getColumnNumber();
+        }
+
+        IncludeLocation(Location location) {
+            systemId = location.getSystemId();
+            lineNumber = location.getLineNumber();
+            columnNumber = location.getColumnNumber();
         }
 
         @Override

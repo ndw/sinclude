@@ -74,15 +74,3 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             build/distributions/sinclude-${{ env.CI_TAG }}.zip
-
-      - name: Publish to Sonatype
-        if: ${{ env.HAVE_GPGKEYURI == 'true' && env.CI_BRANCH == 'master' && env.CI_TAG != '' }}
-        run: |
-          curl -s -o secret.gpg ${{ secrets.GPGKEYURI }}
-          ./gradlew -PsonatypeUsername=${{ secrets.SONATYPEUSER }} \
-                  -PsonatypePassword="${{ secrets.SONATYPEPASS }}" \
-                  -Psigning.keyId="${{ secrets.SIGNKEY }}" \
-                  -Psigning.password="${{ secrets.SIGNPSW }}" \
-                  -Psigning.secretKeyRingFile=./secret.gpg \
-                  publish
-          rm -f secret.gpg

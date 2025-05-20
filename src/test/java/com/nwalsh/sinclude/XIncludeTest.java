@@ -403,6 +403,14 @@ public class XIncludeTest extends TestCase {
                 assertTrue(node.getBaseURI().toString().endsWith("/two.xml"));
             } else if ("one".equals(node.getNodeName().getLocalName())) {
                 assertTrue(node.getBaseURI().toString().endsWith("/one.xml"));
+            } else if ("zero".equals(node.getNodeName().getLocalName())) {
+                assertTrue(node.getBaseURI().toString().endsWith("/one.xml"));
+            } else if ("base1".equals(node.getNodeName().getLocalName())) {
+                assertEquals("http://example.com/path/to/thing", node.getBaseURI().toString());
+            } else if ("nested-base1".equals(node.getNodeName().getLocalName())) {
+                assertEquals("http://example.com/path/to/thing", node.getBaseURI().toString());
+            } else if ("nested-base2".equals(node.getNodeName().getLocalName())) {
+                assertEquals("http://example.com/path/to/spoon/fork", node.getBaseURI().toString());
             } else {
                 fail();
             }

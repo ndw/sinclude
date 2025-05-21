@@ -66,7 +66,7 @@ jobs:
         run: |
           ./gradlew publish
           ./gradlew jreleaserConfig
-          ./gradlew --stacktrace jreleaserDeploy
+          ./gradlew jreleaserDeploy
 
       - name: Deploy master to gh-pages
         if: ${{ env.HAVE_ACCESS_TOKEN == 'true' && env.CI_BRANCH == 'master' }}

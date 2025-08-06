@@ -52,10 +52,10 @@ jobs:
 
       - name: Build
         run: |
-          echo ./gradlew -PsaxonVersion=10.9 clean test
-          echo ./gradlew -PsaxonVersion=11.7 clean test
-          echo ./gradlew -PsaxonVersion=12.8 clean test
-          echo ./gradlew clean dist website mavenReleaseArtifact
+          ./gradlew -PsaxonVersion=10.9 clean test
+          ./gradlew -PsaxonVersion=11.7 clean test
+          ./gradlew -PsaxonVersion=12.8 clean test
+          ./gradlew clean dist website mavenReleaseArtifact
 
       - name: Deploy
         if: ${{ env.CI_BRANCH == 'master' && env.CI_TAG != '' }}

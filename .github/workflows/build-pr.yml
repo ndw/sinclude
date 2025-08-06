@@ -47,6 +47,7 @@ jobs:
       CI_PROJECT_REPONAME: ${{ needs.check_branch.outputs.reponame }}
       CI_BRANCH: ${{ needs.check_branch.outputs.branch }}
       CI_TAG: ${{ needs.check_branch.outputs.tag }}
+      JRELEASER_GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
     steps:
       - name: Checkout the branch
         uses: actions/checkout@v3
@@ -57,3 +58,8 @@ jobs:
           ./gradlew -PsaxonVersion=11.5 clean test
           ./gradlew -PsaxonVersion=12.1 clean test
           ./gradlew clean dist
+
+      - name: testDeploy
+        run: |
+          ./gradlew publish
+          ./gradlew jreleaserConfig

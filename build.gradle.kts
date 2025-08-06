@@ -1,7 +1,4 @@
 import com.nwalsh.gradle.saxon.SaxonXsltTask
-import org.jreleaser.gradle.plugin.JReleaserExtension
-import org.jreleaser.model.Active
-import org.jreleaser.model.api.deploy.maven.MavenCentralMavenDeployer
 
 buildscript {
   repositories {
@@ -34,10 +31,10 @@ buildscript {
 plugins {
   id("java-library")
   id("maven-publish")
+  id("signing")
   id("com.github.gmazzo.buildconfig") version "5.3.5"
   id("com.nwalsh.gradle.saxon.saxon-gradle") version "0.10.4"
   id("com.nwalsh.gradle.relaxng.validate") version "0.10.3"
-  id("org.jreleaser") version "1.18.0"
 }
 
 val saxonVersion = project.properties["saxonVersion"].toString()
@@ -109,6 +106,7 @@ tasks.jar {
 }
 
 tasks.javadoc {
+  options.memberLevel = JavadocMemberLevel.PUBLIC
   if (JavaVersion.current().isJava9Compatible) {
     (options as StandardJavadocDocletOptions).addBooleanOption("html5", true)
   }
@@ -211,93 +209,62 @@ tasks.register<SaxonXsltTask>("website") {
   )
 }
 
+tasks.register<Zip>("mavenReleaseArtifact") {
+  dependsOn("publish")
+
+  from(layout.buildDirectory.dir("maven"))
+  archiveFileName = "maven-${basename}-${sincludeVersion}.zip"
+}
+
 // ============================================================
 
-configure<PublishingExtension> {
+publishing {
+  repositories {
+    maven {
+      url = uri("build/maven")
+    }
+  }
+
   publications {
-    register<MavenPublication>("maven") {
-      from(components["java"])
+    create<MavenPublication>("mavenSInclude") {
       pom {
-        name.set(project.name)
         groupId = "com.nwalsh"
         artifactId = "sinclude"
         version = sincludeVersion
-        description.set(project.description ?: project.name)
-        url.set("https://github.com/ndw/sinclude")
+        name = "Saxon XInclude"
+        packaging = "jar"
+        description = "An XInclude processor for Saxon"
+        url = "https://github.com/ndw/sinclude"
+
+        scm {
+          url = "scm:git@github.com:ndw/sinclude.git"
+          connection = "scm:git@github.com:ndw/sinclude.git"
+          developerConnection = "scm:git@github.com:ndw/sinclude.git"
+        }
+
         licenses {
           license {
-            name.set("Apache License version 2.0")
-            url.set("https://www.apache.org/licenses/LICENSE-2.0")
+            name = "Apache License version 2.0"
+            url = "https://www.apache.org/licenses/LICENSE-2.0"
+            distribution = "repo"
           }
         }
+
         developers {
           developer {
-            id.set("com.nwalsh")
-            name.set("Norman Walsh")
-            email.set("ndw@nwalsh.com")
+            id = "ndw"
+            name = "Norman Walsh"
           }
-        }
-        scm {
-          connection.set("scm:git@github.com:ndw/sinclude.git")
-          developerConnection.set("scm:git@github.com:ndw/sinclude.git")
-          url.set("https://github.com/ndw/sinclude")
         }
       }
 
+      from(components["java"])
       artifact(sourcesJar.get())
       artifact(javadocJar.get())
     }
   }
-
-  repositories {
-    maven {
-      url = layout.buildDirectory.dir("staging-deploy").get().asFile.toURI()
-    }
-  }
 }
 
-configure<JReleaserExtension> {
-  gitRootSearch = true
-  project {
-    group = "com.nwalsh"
-    version = sincludeVersion
-    description = "An XInclude processor for Saxon"
-    authors = listOf("ndw")
-    license = "Apache License version 2.0"
-    links {
-      homepage = "https://github.com/ndw/sinclude"
-      bugTracker = "https://github.com/ndw/sinclude/issues"
-      contact = "https://github.com/ndw/sinclude"
-    }
-    inceptionYear = "2020"
-    vendor = "Norman Walsh"
-    copyright = "Copyright (c)2020-2025 Norman Walsh"
-  }
-
-  release {
-    github {
-      commitAuthor {
-        name = "Norman Walsh"
-        email = "ndw@nwalsh.com"
-      }
-    }
-  }
-
-  signing {
-    active = Active.ALWAYS
-    armored = true
-  }
-
-  deploy {
-    maven {
-      mavenCentral {
-        register("sonatype") {
-          active = Active.ALWAYS
-          stage = MavenCentralMavenDeployer.Stage.UPLOAD
-          url = "https://central.sonatype.com/api/v1/publisher"
-          stagingRepositories.add("build/staging-deploy")
-        }
-      }
-    }
-  }
+signing {
+  sign(publishing.publications["mavenSInclude"])
 }

@@ -45,12 +45,7 @@ jobs:
       CI_PROJECT_REPONAME: ${{ needs.check_branch.outputs.reponame }}
       CI_BRANCH: ${{ needs.check_branch.outputs.branch }}
       CI_TAG: ${{ needs.check_branch.outputs.tag }}
-      JRELEASER_GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-      JRELEASER_DEPLOY_MAVEN_MAVENCENTRAL_SONATYPE_USERNAME: ${{ secrets.SONATYPEUSER }}
-      JRELEASER_DEPLOY_MAVEN_MAVENCENTRAL_SONATYPE_PASSWORD: ${{ secrets.SONATYPEPASS }}
-      JRELEASER_GPG_SECRET_KEY: ${{ secrets.GPG_PRIVATE }}
-      JRELEASER_GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC }}
-      JRELEASER_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      BEARER: ${{ secrets.SONATYPE_TOKEN }}
     steps:
       - name: Checkout the branch
         uses: actions/checkout@v3
@@ -60,13 +55,12 @@ jobs:
           echo ./gradlew -PsaxonVersion=10.9 clean test
           echo ./gradlew -PsaxonVersion=11.5 clean test
           echo ./gradlew -PsaxonVersion=12.1 clean test
-          echo ./gradlew clean dist website
+          echo ./gradlew clean dist website mavenReleaseArtifact
 
-      - name: testDeploy
+      - name: Deploy
+        if: ${{ env.CI_BRANCH == 'master' && env.CI_TAG != '' }}
         run: |
-          ./gradlew publish
-          ./gradlew jreleaserConfig
-          ./gradlew jreleaserDeploy
+          curl --request POST --verbose --header "Authorization: Bearer ${BEARER}" --form bundle="@build/distributions/maven-sinclude-${CI_TAG}" https://central.sonatype.com/api/v1/publisher/upload
 
       - name: Deploy master to gh-pages
         if: ${{ env.HAVE_ACCESS_TOKEN == 'true' && env.CI_BRANCH == 'master' }}

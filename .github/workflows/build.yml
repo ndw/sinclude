@@ -45,7 +45,6 @@ jobs:
       CI_PROJECT_REPONAME: ${{ needs.check_branch.outputs.reponame }}
       CI_BRANCH: ${{ needs.check_branch.outputs.branch }}
       CI_TAG: ${{ needs.check_branch.outputs.tag }}
-      BEARER: ${{ secrets.SONATYPE_TOKEN }}
     steps:
       - name: Checkout the branch
         uses: actions/checkout@v3
@@ -67,7 +66,7 @@ jobs:
                   -Psigning.secretKeyRingFile=./secret.gpg \
                    mavenReleaseArtifact
           rm -f secret.gpg
-          curl --request POST --verbose --header "Authorization: Bearer ${BEARER}" --form bundle="@build/distributions/maven-sinclude-${CI_TAG}.zip" https://central.sonatype.com/api/v1/publisher/upload
+          curl --request POST --verbose --header "Authorization: Bearer ${{ secrets.SONATYPE_TOKEN }}" --form bundle="@build/distributions/maven-sinclude-${CI_TAG}.zip" https://central.sonatype.com/api/v1/publisher/upload
 
       - name: Deploy master to gh-pages
         if: ${{ env.HAVE_ACCESS_TOKEN == 'true' && env.CI_BRANCH == 'master' }}

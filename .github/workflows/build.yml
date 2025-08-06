@@ -66,6 +66,8 @@ jobs:
                   -Psigning.secretKeyRingFile=./secret.gpg \
                    mavenReleaseArtifact
           rm -f secret.gpg
+          ls -l build
+          ls -l build/distributions/maven-sinclude-${CI_TAG}.zip
           curl --request POST --verbose --header "Authorization: Bearer ${{ secrets.SONATYPE_TOKEN }}" --form bundle="@build/distributions/maven-sinclude-${CI_TAG}.zip" https://central.sonatype.com/api/v1/publisher/upload
 
       - name: Deploy master to gh-pages

@@ -55,11 +55,18 @@ jobs:
           ./gradlew -PsaxonVersion=10.9 clean test
           ./gradlew -PsaxonVersion=11.7 clean test
           ./gradlew -PsaxonVersion=12.8 clean test
-          ./gradlew clean dist website mavenReleaseArtifact
+          ./gradlew clean dist website
 
-      - name: Deploy
-        if: ${{ env.CI_BRANCH == 'master' && env.CI_TAG != '' }}
+      - name: Publish to Sonatype
+        if: ${{ env.HAVE_GPGKEYURI == 'true' && env.CI_BRANCH == 'master' && env.CI_TAG != '' }}
         run: |
+          curl -s -o secret.gpg ${{ secrets.GPGKEYURI }}
+          ./gradlew -PsonatypePassword="${{ secrets.SONATYPEPASS }}" \
+                  -Psigning.keyId="${{ secrets.SIGNKEY }}" \
+                  -Psigning.password="${{ secrets.SIGNPSW }}" \
+                  -Psigning.secretKeyRingFile=./secret.gpg \
+                   mavenReleaseArtifact
+          rm -f secret.gpg
           curl --request POST --verbose --header "Authorization: Bearer ${BEARER}" --form bundle="@build/distributions/maven-sinclude-${CI_TAG}" https://central.sonatype.com/api/v1/publisher/upload
 
       - name: Deploy master to gh-pages

@@ -53,8 +53,8 @@ jobs:
       - name: Build
         run: |
           echo ./gradlew -PsaxonVersion=10.9 clean test
-          echo ./gradlew -PsaxonVersion=11.5 clean test
-          echo ./gradlew -PsaxonVersion=12.1 clean test
+          echo ./gradlew -PsaxonVersion=11.7 clean test
+          echo ./gradlew -PsaxonVersion=12.8 clean test
           echo ./gradlew clean dist website mavenReleaseArtifact
 
       - name: Deploy

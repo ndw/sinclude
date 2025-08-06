@@ -68,7 +68,7 @@ jobs:
                    mavenReleaseArtifact
           rm -f secret.gpg
           unzip -v build/distributions/maven-sinclude-${CI_TAG}.zip
-          curl --request POST --verbose --header "Authorization: Bearer ${BEARER}" --form bundle="@build/distributions/maven-sinclude-${CI_TAG}.zip" https://central.sonatype.com/api/v1/publisher/upload
+          curl --header "Authorization: Bearer ${BEARER}" --form bundle=@build/distributions/maven-sinclude-${CI_TAG}.zip https://central.sonatype.com/api/v1/publisher/upload
 
       - name: Deploy master to gh-pages
         if: ${{ env.HAVE_ACCESS_TOKEN == 'true' && env.CI_BRANCH == 'master' }}

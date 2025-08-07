@@ -58,7 +58,7 @@ jobs:
           ./gradlew clean dist website
 
       - name: Publish to Sonatype
-        if: ${{ env.HAVE_GPGKEYURI == 'true' && env.CI_BRANCH == 'master' }}
+        if: ${{ env.HAVE_GPGKEYURI == 'true' && env.CI_BRANCH == 'master' && env.CI_TAG != '' }}
         run: |
           curl -s -o secret.gpg ${{ secrets.GPGKEYURI }}
           ./gradlew -PsonatypePassword="${{ secrets.SONATYPEPASS }}" \
@@ -67,11 +67,12 @@ jobs:
                   -Psigning.secretKeyRingFile=./secret.gpg \
                    mavenReleaseArtifact
           rm -f secret.gpg
+          curl --header "Authorization: Bearer ${BEARER}" --form bundle=@build/distributions/maven-sinclude-${CI_TAG}.zip https://central.sonatype.com/api/v1/publisher/upload
 
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
-        with:
-          limit-access-to-actor: true
+#      - name: Setup upterm session
+#        uses: lhotari/action-upterm@v1
+#        with:
+#          limit-access-to-actor: true
 
       - name: Deploy master to gh-pages
         if: ${{ env.HAVE_ACCESS_TOKEN == 'true' && env.CI_BRANCH == 'master' }}

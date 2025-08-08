@@ -3,4 +3,4 @@
 :CUSTOM_ID: h-CE868C20-B294-4E6F-A808-71029DFE0E4B
 :END:
 
-This project has [https://codeberg.org/ndw/sinclude][moved to Codeberg].
+This project has [[https://codeberg.org/ndw/sinclude][moved to Codeberg]].
